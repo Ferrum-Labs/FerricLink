@@ -33,7 +33,6 @@ pub struct RunnableConfig {
     pub callbacks: Vec<Arc<dyn CallbackHandler>>,
 }
 
-
 impl RunnableConfig {
     /// Create a new empty configuration
     pub fn new() -> Self {
