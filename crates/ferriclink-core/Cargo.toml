@@ -1,0 +1,73 @@
+[package]
+name = "ferriclink-core"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme.workspace = true
+rust-version.workspace = true
+
+[package.metadata.docs.rs]
+# Documentation configuration for docs.rs
+features = ["serde", "tokio", "tracing"]
+rustdoc-args = ["--cfg", "docsrs"]
+
+[dependencies]
+# Serialization and data structures
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+uuid = { version = "1.18.1", features = ["v4", "serde"] }
+
+# Async runtime
+tokio = { version = "1.47.1", features = ["full"] }
+futures = "0.3.31"
+
+# Error handling
+thiserror = "2.0.17"
+anyhow = "1.0.100"
+
+# Collections and utilities
+indexmap = { version = "2.11.4", features = ["serde"] }
+chrono = { version = "0.4.42", features = ["serde"] }
+
+# Type system and validation
+validator = { version = "0.20.0", features = ["derive"], optional = true }
+
+# Logging and tracing
+tracing = "0.1.41"
+tracing-subscriber = "0.3.20"
+
+# HTTP client for external integrations
+reqwest = { version = "0.12.23", features = ["json", "stream"], optional = true }
+
+# Async traits
+async-trait = "0.1.89"
+
+# Collections and iterators
+itertools = "0.14.0"
+
+# String handling
+regex = "1.11.3"
+
+[features]
+default = []
+http = ["dep:reqwest"]
+validation = ["dep:validator"]
+all = ["http", "validation"]
+
+[dev-dependencies]
+tokio-test = "0.4.4"
+criterion = "0.7.0"
+
+# [[bench]]
+# name = "runnable_bench"
+# harness = false
+
+[lints]
+workspace = true
