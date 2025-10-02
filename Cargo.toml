@@ -12,7 +12,7 @@ repository = "https://github.com/ferrum-labs/ferriclink"
 homepage = "https://ferrum-labs.github.io"
 documentation = "https://docs.rs/ferriclink"
 keywords = ["ai", "llm", "langchain", "rust", "machine-learning"]
-categories = ["artificial-intelligence", "web-programming::http-client"]
+categories = ["science", "web-programming::http-client", "asynchronous"]
 readme = "README.md"
 rust-version = "1.85.0"
 
