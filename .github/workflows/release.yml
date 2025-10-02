@@ -134,13 +134,18 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
 
+      - name: Verify crate is ready for publishing
+        run: |
+          cd crates/ferriclink-core
+          cargo publish --dry-run
+
       - name: Publish to crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           # Publish the core crate
           cd crates/ferriclink-core
-          cargo publish --token $CARGO_REGISTRY_TOKEN
+          cargo publish --token $CARGO_REGISTRY_TOKEN --verbose
 
       - name: Wait for crates.io
         run: |
