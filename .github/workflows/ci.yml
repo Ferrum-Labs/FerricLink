@@ -22,6 +22,8 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          components: rustfmt, clippy
+        with:
           toolchain: 1.85.0
 
       - name: Verify Rust version
@@ -44,6 +46,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -89,6 +92,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -131,6 +135,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -162,6 +168,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Install cargo-audit
         run: cargo install cargo-audit
@@ -179,6 +187,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -212,6 +222,8 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -239,17 +251,22 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Check version consistency
         run: |
-          # Check that workspace version matches crate versions
+          # Check that workspace version is properly set
           workspace_version=$(grep '^version = ' Cargo.toml | cut -d'"' -f2)
-          crate_version=$(grep '^version = ' crates/ferriclink-core/Cargo.toml | cut -d'"' -f2)
+          echo "Workspace version: $workspace_version"
           
-          if [ "$workspace_version" != "$crate_version" ]; then
-            echo "Version mismatch: workspace=$workspace_version, crate=$crate_version"
+          # Check that crate uses workspace version
+          if ! grep -q 'version.workspace = true' crates/ferriclink-core/Cargo.toml; then
+            echo "Crate should use workspace version"
             exit 1
           fi
+          
+          echo "Version configuration is correct"
 
       - name: Check for unreleased changes
         run: |
