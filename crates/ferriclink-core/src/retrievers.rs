@@ -215,9 +215,10 @@ pub struct MultiRetriever {
 }
 
 /// Method for combining results from multiple retrievers
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum CombineMethod {
     /// Take the union of all results
+    #[default]
     Union,
     /// Take the intersection of all results
     Intersection,
@@ -225,12 +226,6 @@ pub enum CombineMethod {
     First,
     /// Take the last retriever's results
     Last,
-}
-
-impl Default for CombineMethod {
-    fn default() -> Self {
-        Self::Union
-    }
 }
 
 impl MultiRetriever {
