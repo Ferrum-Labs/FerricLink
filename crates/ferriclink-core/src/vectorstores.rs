@@ -145,6 +145,7 @@ impl InMemoryVectorStore {
     }
 
     /// Generate embeddings for texts using the embedding model
+    #[allow(dead_code)]
     async fn generate_embeddings(&self, texts: &[String]) -> Result<Vec<Embedding>> {
         if let Some(model) = &self.embedding_model {
             model.embed_documents(texts).await

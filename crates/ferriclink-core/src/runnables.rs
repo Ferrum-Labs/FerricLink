@@ -14,7 +14,7 @@ use crate::impl_serializable;
 use crate::utils::{colors, print_colored_text};
 
 /// Configuration for running a Runnable
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct RunnableConfig {
     /// Tags for this run
     #[serde(default)]
@@ -33,17 +33,6 @@ pub struct RunnableConfig {
     pub callbacks: Vec<Arc<dyn CallbackHandler>>,
 }
 
-impl Default for RunnableConfig {
-    fn default() -> Self {
-        Self {
-            tags: Vec::new(),
-            metadata: HashMap::new(),
-            debug: false,
-            verbose: false,
-            callbacks: Vec::new(),
-        }
-    }
-}
 
 impl RunnableConfig {
     /// Create a new empty configuration
@@ -151,25 +140,25 @@ impl Default for ConsoleCallbackHandler {
 #[async_trait]
 impl CallbackHandler for ConsoleCallbackHandler {
     async fn on_start(&self, run_id: &str, input: &serde_json::Value) -> Result<()> {
-        let message = format!("Starting run {} with input: {}", run_id, input);
+        let message = format!("Starting run {run_id} with input: {input}");
         print_colored_text(&message, self.color.as_deref());
         Ok(())
     }
 
     async fn on_success(&self, run_id: &str, output: &serde_json::Value) -> Result<()> {
-        let message = format!("Run {} completed with output: {}", run_id, output);
+        let message = format!("Run {run_id} completed with output: {output}");
         print_colored_text(&message, self.color.as_deref());
         Ok(())
     }
 
     async fn on_error(&self, run_id: &str, error: &crate::errors::FerricLinkError) -> Result<()> {
-        let message = format!("Run {} failed with error: {}", run_id, error);
+        let message = format!("Run {run_id} failed with error: {error}");
         print_colored_text(&message, Some(colors::RED));
         Ok(())
     }
 
     async fn on_stream(&self, run_id: &str, chunk: &serde_json::Value) -> Result<()> {
-        let message = format!("Run {} streamed: {}", run_id, chunk);
+        let message = format!("Run {run_id} streamed: {chunk}");
         print_colored_text(&message, self.color.as_deref());
         Ok(())
     }
@@ -389,7 +378,7 @@ where
         let mut results = Vec::new();
         for handle in handles {
             let result = handle.await.map_err(|e| {
-                crate::errors::FerricLinkError::runtime(format!("Task failed: {}", e))
+                crate::errors::FerricLinkError::runtime(format!("Task failed: {e}"))
             })?;
             results.push(result?);
         }

@@ -88,7 +88,7 @@ pub trait Loadable: Serializable {
         Self: Sized,
     {
         let json = String::from_utf8(data.to_vec())
-            .map_err(|e| FerricLinkError::generic(format!("Invalid UTF-8: {}", e)))?;
+            .map_err(|e| FerricLinkError::generic(format!("Invalid UTF-8: {e}")))?;
         Self::from_json(&json)
     }
 

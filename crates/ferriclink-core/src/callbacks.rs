@@ -279,7 +279,7 @@ impl CallbackHandler for ConsoleCallbackHandler {
         if self.verbose {
             if let Some(output) = &run_info.output {
                 let color = self.color.as_deref();
-                print_colored_text(&format!("   Output: {}", output), color);
+                print_colored_text(&format!("   Output: {output}"), color);
             }
         }
 
@@ -288,14 +288,14 @@ impl CallbackHandler for ConsoleCallbackHandler {
 
     async fn on_run_error(&self, run_info: &RunInfo) -> Result<()> {
         let error_msg = run_info.error.as_deref().unwrap_or("Unknown error");
-        print_colored_text(&format!("\n> Error: {}", error_msg), Some(colors::RED));
+        print_colored_text(&format!("\n> Error: {error_msg}"), Some(colors::RED));
 
         Ok(())
     }
 
     async fn on_run_stream(&self, _run_info: &RunInfo, chunk: &serde_json::Value) -> Result<()> {
         let color = self.color.as_deref();
-        print_colored_text(&format!("{}", chunk), color);
+        print_colored_text(&format!("{chunk}"), color);
         Ok(())
     }
 
@@ -378,6 +378,11 @@ impl MemoryCallbackHandler {
     /// Get the number of runs
     pub async fn len(&self) -> usize {
         self.runs.read().await.len()
+    }
+
+    /// Check if there are any runs
+    pub async fn is_empty(&self) -> bool {
+        self.runs.read().await.is_empty()
     }
 }
 

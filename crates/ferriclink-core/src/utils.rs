@@ -17,7 +17,7 @@ pub mod colors {
 pub fn print_colored_text(text: &str, color: Option<&str>) {
     match color {
         Some(color) => println!("{}{}{}", color, text, colors::RESET),
-        None => println!("{}", text),
+        None => println!("{text}"),
     }
 }
 

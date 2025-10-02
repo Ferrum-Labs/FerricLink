@@ -346,7 +346,7 @@ impl ToolCollection {
         config: Option<RunnableConfig>,
     ) -> Result<ToolResult> {
         let tool = self.get_tool(name).ok_or_else(|| {
-            crate::errors::FerricLinkError::generic(format!("Tool '{}' not found", name))
+            crate::errors::FerricLinkError::generic(format!("Tool '{name}' not found"))
         })?;
 
         tool.invoke(input, config).await

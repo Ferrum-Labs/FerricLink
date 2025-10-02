@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn test_version() {
-        assert!(!VERSION.is_empty());
+        assert!(!VERSION.is_empty(), "Version should not be empty");
     }
 
     #[test]
