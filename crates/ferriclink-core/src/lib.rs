@@ -39,7 +39,8 @@ mod tests {
 
     #[test]
     fn test_version() {
-        assert!(!VERSION.is_empty(), "Version should not be empty");
+        // VERSION is a const string that can never be empty, so we just check it's not the default
+        assert_ne!(VERSION, "", "Version should not be empty");
     }
 
     #[test]
