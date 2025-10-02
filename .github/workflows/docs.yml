@@ -43,7 +43,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          cargo doc --all-features --no-deps --documentation-private-items
+          cargo doc --all-features --no-deps --document-private-items
           # Create an index.html that redirects to ferriclink-core
           echo '<meta http-equiv="refresh" content="0; url=ferriclink_core/index.html">' > target/doc/index.html
 
