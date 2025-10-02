@@ -51,7 +51,8 @@ impl Document {
 
     /// Get metadata value as a string
     pub fn get_metadata_string(&self, key: &str) -> Option<String> {
-        self.get_metadata(key).and_then(|v| v.as_str().map(|s| s.to_string()))
+        self.get_metadata(key)
+            .and_then(|v| v.as_str().map(|s| s.to_string()))
     }
 
     /// Get metadata value as a number
@@ -91,17 +92,20 @@ impl Document {
         while start < self.page_content.len() {
             let end = (start + chunk_size).min(self.page_content.len());
             let chunk_content = self.page_content[start..end].to_string();
-            
+
             let mut chunk_metadata = self.metadata.clone();
-            chunk_metadata.insert("chunk_index".to_string(), serde_json::Value::Number(
-                serde_json::Number::from(chunks.len())
-            ));
-            chunk_metadata.insert("chunk_start".to_string(), serde_json::Value::Number(
-                serde_json::Number::from(start)
-            ));
-            chunk_metadata.insert("chunk_end".to_string(), serde_json::Value::Number(
-                serde_json::Number::from(end)
-            ));
+            chunk_metadata.insert(
+                "chunk_index".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(chunks.len())),
+            );
+            chunk_metadata.insert(
+                "chunk_start".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(start)),
+            );
+            chunk_metadata.insert(
+                "chunk_end".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(end)),
+            );
 
             chunks.push(Document {
                 page_content: chunk_content,
@@ -135,9 +139,10 @@ impl Document {
             }
         }
 
-        metadata.insert("source_documents".to_string(), serde_json::Value::Number(
-            serde_json::Number::from(documents.len())
-        ));
+        metadata.insert(
+            "source_documents".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(documents.len())),
+        );
 
         Document {
             page_content: content,
@@ -213,7 +218,7 @@ impl DocumentCollection {
     /// Split all documents into chunks
     pub fn split_all(&self, chunk_size: usize, overlap: usize) -> DocumentCollection {
         let mut chunks = Vec::new();
-        
+
         for doc in &self.documents {
             chunks.extend(doc.split(chunk_size, overlap));
         }
@@ -230,7 +235,12 @@ impl DocumentCollection {
         F: Fn(&Document) -> bool,
     {
         DocumentCollection {
-            documents: self.documents.iter().filter(|doc| predicate(doc)).cloned().collect(),
+            documents: self
+                .documents
+                .iter()
+                .filter(|doc| predicate(doc))
+                .cloned()
+                .collect(),
             metadata: self.metadata.clone(),
         }
     }
@@ -253,7 +263,10 @@ impl Default for DocumentCollection {
     }
 }
 
-impl_serializable!(DocumentCollection, ["ferriclink", "documents", "collection"]);
+impl_serializable!(
+    DocumentCollection,
+    ["ferriclink", "documents", "collection"]
+);
 
 /// Trait for objects that can be converted to documents
 pub trait ToDocument {
@@ -302,8 +315,11 @@ mod tests {
     #[test]
     fn test_document_with_metadata() {
         let mut metadata = HashMap::new();
-        metadata.insert("source".to_string(), serde_json::Value::String("test".to_string()));
-        
+        metadata.insert(
+            "source".to_string(),
+            serde_json::Value::String("test".to_string()),
+        );
+
         let doc = Document::new_with_metadata("Hello, world!", metadata);
         assert_eq!(doc.page_content, "Hello, world!");
         assert_eq!(doc.get_metadata_string("source"), Some("test".to_string()));
@@ -312,11 +328,14 @@ mod tests {
     #[test]
     fn test_document_metadata_operations() {
         let mut doc = Document::new("Test content");
-        
+
         doc.add_metadata("key1", serde_json::Value::String("value1".to_string()));
-        doc.add_metadata("key2", serde_json::Value::Number(serde_json::Number::from(42)));
+        doc.add_metadata(
+            "key2",
+            serde_json::Value::Number(serde_json::Number::from(42)),
+        );
         doc.add_metadata("key3", serde_json::Value::Bool(true));
-        
+
         assert_eq!(doc.get_metadata_string("key1"), Some("value1".to_string()));
         assert_eq!(doc.get_metadata_number("key2"), Some(42.0));
         assert_eq!(doc.get_metadata_bool("key3"), Some(true));
@@ -326,9 +345,10 @@ mod tests {
 
     #[test]
     fn test_document_split() {
-        let doc = Document::new("This is a test document that should be split into multiple chunks.");
+        let doc =
+            Document::new("This is a test document that should be split into multiple chunks.");
         let chunks = doc.split(20, 5);
-        
+
         assert!(chunks.len() > 1);
         assert_eq!(chunks[0].get_metadata_number("chunk_index"), Some(0.0));
         assert_eq!(chunks[1].get_metadata_number("chunk_index"), Some(1.0));
@@ -339,7 +359,7 @@ mod tests {
         let doc1 = Document::new("First document");
         let doc2 = Document::new("Second document");
         let joined = Document::join(&[doc1, doc2], " | ");
-        
+
         assert_eq!(joined.page_content, "First document | Second document");
         assert_eq!(joined.get_metadata_number("source_documents"), Some(2.0));
     }
@@ -347,10 +367,10 @@ mod tests {
     #[test]
     fn test_document_collection() {
         let mut collection = DocumentCollection::new();
-        
+
         collection.add_document(Document::new("Doc 1"));
         collection.add_document(Document::new("Doc 2"));
-        
+
         assert_eq!(collection.len(), 2);
         assert!(!collection.is_empty());
         assert_eq!(collection.total_length(), 10); // "Doc 1" + "Doc 2"
@@ -363,11 +383,12 @@ mod tests {
             Document::new("This is a longer document"),
         ];
         let collection = DocumentCollection::new_with_documents(docs);
-        
+
         let filtered = collection.filter(|doc| doc.len() > 10);
         assert_eq!(filtered.len(), 1);
-        
-        let mapped = collection.map(|doc| Document::new(format!("Processed: {}", doc.page_content)));
+
+        let mapped =
+            collection.map(|doc| Document::new(format!("Processed: {}", doc.page_content)));
         assert_eq!(mapped.len(), 2);
         assert!(mapped.documents[0].page_content.starts_with("Processed:"));
     }
@@ -377,7 +398,7 @@ mod tests {
         let doc1 = "Hello".to_document();
         let doc2 = "World".to_string().to_document();
         let doc3 = doc1.clone().to_document();
-        
+
         assert_eq!(doc1.page_content, "Hello");
         assert_eq!(doc2.page_content, "World");
         assert_eq!(doc3.page_content, "Hello");

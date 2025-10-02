@@ -46,7 +46,8 @@ impl Embedding {
             return 0.0;
         }
 
-        let dot_product: f32 = self.values
+        let dot_product: f32 = self
+            .values
             .iter()
             .zip(other.values.iter())
             .map(|(a, b)| a * b)
@@ -68,7 +69,8 @@ impl Embedding {
             return f32::INFINITY;
         }
 
-        let sum_squared_diffs: f32 = self.values
+        let sum_squared_diffs: f32 = self
+            .values
             .iter()
             .zip(other.values.iter())
             .map(|(a, b)| (a - b).powi(2))
@@ -127,18 +129,18 @@ impl MockEmbeddings {
     fn generate_mock_embedding(&self, text: &str) -> Embedding {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
-        
+
         let mut hasher = DefaultHasher::new();
         text.hash(&mut hasher);
         let hash = hasher.finish();
-        
+
         let mut values = Vec::with_capacity(self.dimension);
         for i in 0..self.dimension {
             let seed = hash.wrapping_add(i as u64);
             let value = (seed as f32 / u64::MAX as f32) * 2.0 - 1.0; // Normalize to [-1, 1]
             values.push(value);
         }
-        
+
         Embedding::new(values)
     }
 }
@@ -176,7 +178,7 @@ mod tests {
     fn test_embedding_creation() {
         let values = vec![0.1, 0.2, 0.3, 0.4];
         let embedding = Embedding::new(values.clone());
-        
+
         assert_eq!(embedding.values, values);
         assert_eq!(embedding.dimension(), 4);
         assert!(embedding.metadata.is_empty());
@@ -187,10 +189,10 @@ mod tests {
         let embedding1 = Embedding::new(vec![1.0, 0.0, 0.0]);
         let embedding2 = Embedding::new(vec![0.0, 1.0, 0.0]);
         let embedding3 = Embedding::new(vec![1.0, 0.0, 0.0]);
-        
+
         // Orthogonal vectors should have similarity 0
         assert!((embedding1.cosine_similarity(&embedding2) - 0.0).abs() < 1e-6);
-        
+
         // Identical vectors should have similarity 1
         assert!((embedding1.cosine_similarity(&embedding3) - 1.0).abs() < 1e-6);
     }
@@ -199,7 +201,7 @@ mod tests {
     fn test_embedding_euclidean_distance() {
         let embedding1 = Embedding::new(vec![0.0, 0.0]);
         let embedding2 = Embedding::new(vec![3.0, 4.0]);
-        
+
         // Distance should be 5 (3-4-5 triangle)
         assert!((embedding1.euclidean_distance(&embedding2) - 5.0).abs() < 1e-6);
     }
@@ -207,18 +209,18 @@ mod tests {
     #[tokio::test]
     async fn test_mock_embeddings() {
         let embeddings = MockEmbeddings::new("test-model", 128);
-        
+
         assert_eq!(embeddings.dimension(), 128);
         assert_eq!(embeddings.model_name(), "test-model");
         assert_eq!(embeddings.model_type(), "mock_embeddings");
-        
+
         let embedding = embeddings.embed_query("test text").await.unwrap();
         assert_eq!(embedding.dimension(), 128);
-        
+
         // Same text should produce same embedding
         let embedding2 = embeddings.embed_query("test text").await.unwrap();
         assert_eq!(embedding.values, embedding2.values);
-        
+
         // Different text should produce different embedding
         let embedding3 = embeddings.embed_query("different text").await.unwrap();
         assert_ne!(embedding.values, embedding3.values);
@@ -228,7 +230,7 @@ mod tests {
     async fn test_embed_documents() {
         let embeddings = MockEmbeddings::new("test-model", 64);
         let texts = vec!["text1".to_string(), "text2".to_string()];
-        
+
         let results = embeddings.embed_documents(&texts).await.unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].dimension(), 64);

@@ -48,7 +48,10 @@ impl VectorSearchResult {
     }
 }
 
-impl_serializable!(VectorSearchResult, ["ferriclink", "vectorstores", "search_result"]);
+impl_serializable!(
+    VectorSearchResult,
+    ["ferriclink", "vectorstores", "search_result"]
+);
 
 /// Base trait for all vector stores
 #[async_trait]
@@ -72,7 +75,7 @@ pub trait VectorStore: Send + Sync + 'static {
             .zip(metadatas.unwrap_or_default().into_iter().cycle())
             .map(|(text, metadata)| Document::new_with_metadata(text, metadata))
             .collect();
-        
+
         self.add_documents(documents, embeddings).await
     }
 
@@ -181,16 +184,19 @@ impl VectorStore for InMemoryVectorStore {
         let mut id_store = self.ids.write().await;
 
         let generated_embeddings = embeddings.unwrap_or_else(|| {
-            documents.iter().map(|doc| {
-                let mut values = Vec::new();
-                for (i, c) in doc.page_content.chars().enumerate() {
-                    values.push((c as u32 as f32 + i as f32) / 100.0);
-                }
-                while values.len() < 128 {
-                    values.push(0.0);
-                }
-                Embedding::new(values)
-            }).collect()
+            documents
+                .iter()
+                .map(|doc| {
+                    let mut values = Vec::new();
+                    for (i, c) in doc.page_content.chars().enumerate() {
+                        values.push((c as u32 as f32 + i as f32) / 100.0);
+                    }
+                    while values.len() < 128 {
+                        values.push(0.0);
+                    }
+                    Embedding::new(values)
+                })
+                .collect()
         });
 
         let mut ids = Vec::new();
@@ -226,7 +232,8 @@ impl VectorStore for InMemoryVectorStore {
             Embedding::new(values)
         };
 
-        self.similarity_search_by_embedding(&query_embedding, k, None).await
+        self.similarity_search_by_embedding(&query_embedding, k, None)
+            .await
     }
 
     async fn similarity_search_by_embedding(
@@ -323,7 +330,9 @@ pub fn in_memory_vector_store() -> InMemoryVectorStore {
 }
 
 /// Helper function to create an in-memory vector store with embeddings
-pub fn in_memory_vector_store_with_embeddings(embedding_model: Box<dyn Embeddings>) -> InMemoryVectorStore {
+pub fn in_memory_vector_store_with_embeddings(
+    embedding_model: Box<dyn Embeddings>,
+) -> InMemoryVectorStore {
     InMemoryVectorStore::new_with_embeddings(embedding_model)
 }
 
@@ -336,17 +345,17 @@ mod tests {
     #[tokio::test]
     async fn test_in_memory_vector_store() {
         let store = InMemoryVectorStore::new();
-        
+
         // Test empty store
         assert!(store.is_empty().await.unwrap());
         assert_eq!(store.len().await.unwrap(), 0);
-        
+
         // Add documents
         let docs = vec![
             Document::new("Hello world"),
             Document::new("Rust is awesome"),
         ];
-        
+
         let ids = store.add_documents(docs, None).await.unwrap();
         assert_eq!(ids.len(), 2);
         assert_eq!(store.len().await.unwrap(), 2);
@@ -356,16 +365,16 @@ mod tests {
     #[tokio::test]
     async fn test_similarity_search() {
         let store = InMemoryVectorStore::new();
-        
+
         // Add documents
         let docs = vec![
             Document::new("Hello world"),
             Document::new("Rust programming language"),
             Document::new("Python is great"),
         ];
-        
+
         store.add_documents(docs, None).await.unwrap();
-        
+
         // Search for similar documents
         let results = store.similarity_search("Hello", 2, None).await.unwrap();
         assert_eq!(results.len(), 2);
@@ -375,21 +384,21 @@ mod tests {
     #[tokio::test]
     async fn test_delete_documents() {
         let store = InMemoryVectorStore::new();
-        
+
         // Add documents
         let docs = vec![
             Document::new("Doc 1"),
             Document::new("Doc 2"),
             Document::new("Doc 3"),
         ];
-        
+
         let ids = store.add_documents(docs, None).await.unwrap();
         assert_eq!(store.len().await.unwrap(), 3);
-        
+
         // Delete one document
         store.delete(vec![ids[0].clone()]).await.unwrap();
         assert_eq!(store.len().await.unwrap(), 2);
-        
+
         // Clear all documents
         store.clear().await.unwrap();
         assert!(store.is_empty().await.unwrap());
@@ -399,11 +408,11 @@ mod tests {
     async fn test_with_embedding_model() {
         let embedding_model = Box::new(MockEmbeddings::new("test-model", 128));
         let store = InMemoryVectorStore::new_with_embeddings(embedding_model);
-        
+
         let docs = vec![Document::new("Test document")];
         let ids = store.add_documents(docs, None).await.unwrap();
         assert_eq!(ids.len(), 1);
-        
+
         let results = store.similarity_search("Test", 1, None).await.unwrap();
         assert_eq!(results.len(), 1);
     }
@@ -412,7 +421,7 @@ mod tests {
     fn test_vector_search_result() {
         let doc = Document::new("Test document");
         let result = VectorSearchResult::new(doc.clone(), 0.95);
-        
+
         assert_eq!(result.document, doc);
         assert_eq!(result.score, 0.95);
         assert!(result.metadata.is_empty());

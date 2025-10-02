@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use crate::errors::Result;
 use crate::impl_serializable;
-use crate::utils::{print_colored_text, colors};
+use crate::utils::{colors, print_colored_text};
 
 /// Configuration for running a Runnable
 #[derive(Clone, Serialize, Deserialize)]
@@ -88,7 +88,7 @@ impl PartialEq for RunnableConfig {
             && self.metadata == other.metadata
             && self.debug == other.debug
             && self.verbose == other.verbose
-            // Skip callbacks comparison
+        // Skip callbacks comparison
     }
 }
 
@@ -191,7 +191,11 @@ where
     }
 
     /// Batch invoke the runnable with multiple inputs
-    async fn batch(&self, inputs: Vec<Input>, config: Option<RunnableConfig>) -> Result<Vec<Output>> {
+    async fn batch(
+        &self,
+        inputs: Vec<Input>,
+        config: Option<RunnableConfig>,
+    ) -> Result<Vec<Output>> {
         let mut results = Vec::new();
         for input in inputs {
             let result = self.invoke(input, config.clone()).await?;
@@ -201,7 +205,11 @@ where
     }
 
     /// Stream the output of the runnable
-    async fn stream(&self, input: Input, config: Option<RunnableConfig>) -> Result<Pin<Box<dyn futures::Stream<Item = Result<Output>> + Send>>> {
+    async fn stream(
+        &self,
+        input: Input,
+        config: Option<RunnableConfig>,
+    ) -> Result<Pin<Box<dyn futures::Stream<Item = Result<Output>> + Send>>> {
         // Default implementation just yields the single result
         let result = self.invoke(input, config).await;
         let stream = futures::stream::once(async { result });
@@ -325,7 +333,8 @@ where
 }
 
 #[async_trait]
-impl<Input, Intermediate, Output> Runnable<Input, Output> for RunnableSequence<Input, Intermediate, Output>
+impl<Input, Intermediate, Output> Runnable<Input, Output>
+    for RunnableSequence<Input, Intermediate, Output>
 where
     Input: Send + Sync + 'static,
     Intermediate: Send + Sync + 'static,
@@ -366,25 +375,25 @@ where
 {
     async fn invoke(&self, input: Input, config: Option<RunnableConfig>) -> Result<Vec<Output>> {
         let mut handles = Vec::new();
-        
+
         for runnable in &self.runnables {
             let runnable = runnable.clone();
             let input = input.clone();
             let config = config.clone();
-            
-            let handle = tokio::spawn(async move {
-                runnable.invoke(input, config).await
-            });
-            
+
+            let handle = tokio::spawn(async move { runnable.invoke(input, config).await });
+
             handles.push(handle);
         }
-        
+
         let mut results = Vec::new();
         for handle in handles {
-            let result = handle.await.map_err(|e| crate::errors::FerricLinkError::runtime(format!("Task failed: {}", e)))?;
+            let result = handle.await.map_err(|e| {
+                crate::errors::FerricLinkError::runtime(format!("Task failed: {}", e))
+            })?;
             results.push(result?);
         }
-        
+
         Ok(results)
     }
 }
@@ -413,7 +422,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    
 
     #[tokio::test]
     async fn test_runnable_lambda() {
@@ -437,7 +445,7 @@ mod tests {
         let first = Arc::new(RunnableLambda::new(|x: i32| Ok(x + 1)));
         let second = Arc::new(RunnableLambda::new(|x: i32| Ok(x * 2)));
         let sequence = RunnableSequence::new(first, second);
-        
+
         let result = sequence.invoke_simple(5).await.unwrap();
         assert_eq!(result, 12); // (5 + 1) * 2
     }
@@ -447,7 +455,7 @@ mod tests {
         let runnable1 = Arc::new(RunnableLambda::new(|x: i32| Ok(x * 2)));
         let runnable2 = Arc::new(RunnableLambda::new(|x: i32| Ok(x * 3)));
         let parallel = RunnableParallel::new(vec![runnable1, runnable2]);
-        
+
         let results = parallel.invoke_simple(5).await.unwrap();
         assert_eq!(results.len(), 2);
         assert!(results.contains(&10)); // 5 * 2
@@ -467,9 +475,12 @@ mod tests {
             .with_tag("test")
             .with_metadata("key", serde_json::Value::String("value".to_string()))
             .with_debug(true);
-        
+
         assert!(config.tags.contains(&"test".to_string()));
-        assert_eq!(config.metadata.get("key"), Some(&serde_json::Value::String("value".to_string())));
+        assert_eq!(
+            config.metadata.get("key"),
+            Some(&serde_json::Value::String("value".to_string()))
+        );
         assert!(config.debug);
     }
 
@@ -480,7 +491,7 @@ mod tests {
         let input = serde_json::Value::String("test input".to_string());
         let output = serde_json::Value::String("test output".to_string());
         let error = crate::errors::FerricLinkError::generic("test error");
-        
+
         // These should not panic
         handler.on_start(run_id, &input).await.unwrap();
         handler.on_success(run_id, &output).await.unwrap();

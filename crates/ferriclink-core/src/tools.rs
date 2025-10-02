@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::errors::Result;
-use crate::runnables::{Runnable, RunnableConfig};
 use crate::impl_serializable;
+use crate::runnables::{Runnable, RunnableConfig};
 
 /// A tool call made by a language model
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -194,15 +194,11 @@ where
     F: Fn(HashMap<String, serde_json::Value>) -> Result<String> + Send + Sync + 'static,
 {
     /// Create a new function tool
-    pub fn new(
-        name: impl Into<String>,
-        description: impl Into<String>,
-        func: F,
-    ) -> Self {
+    pub fn new(name: impl Into<String>, description: impl Into<String>, func: F) -> Self {
         let name = name.into();
         let description = description.into();
         let schema = ToolSchema::new(&name, &description);
-        
+
         Self {
             name,
             description,
@@ -349,9 +345,10 @@ impl ToolCollection {
         input: HashMap<String, serde_json::Value>,
         config: Option<RunnableConfig>,
     ) -> Result<ToolResult> {
-        let tool = self.get_tool(name)
-            .ok_or_else(|| crate::errors::FerricLinkError::generic(format!("Tool '{}' not found", name)))?;
-        
+        let tool = self.get_tool(name).ok_or_else(|| {
+            crate::errors::FerricLinkError::generic(format!("Tool '{}' not found", name))
+        })?;
+
         tool.invoke(input, config).await
     }
 }
@@ -396,26 +393,35 @@ mod tests {
     fn test_tool_call() {
         let mut call = ToolCall::new("call_123", "test_tool");
         call.add_arg("param1", serde_json::Value::String("value1".to_string()));
-        
+
         assert_eq!(call.id, "call_123");
         assert_eq!(call.name, "test_tool");
-        assert_eq!(call.get_arg("param1"), Some(&serde_json::Value::String("value1".to_string())));
+        assert_eq!(
+            call.get_arg("param1"),
+            Some(&serde_json::Value::String("value1".to_string()))
+        );
     }
 
     #[test]
     fn test_tool_result() {
         let mut result = ToolResult::new("call_123", "Tool executed successfully");
-        result.add_metadata("execution_time", serde_json::Value::Number(serde_json::Number::from(100)));
-        
+        result.add_metadata(
+            "execution_time",
+            serde_json::Value::Number(serde_json::Number::from(100)),
+        );
+
         assert_eq!(result.tool_call_id, "call_123");
         assert_eq!(result.content, "Tool executed successfully");
-        assert_eq!(result.metadata.get("execution_time"), Some(&serde_json::Value::Number(serde_json::Number::from(100))));
+        assert_eq!(
+            result.metadata.get("execution_time"),
+            Some(&serde_json::Value::Number(serde_json::Number::from(100)))
+        );
     }
 
     #[test]
     fn test_tool_schema() {
         let schema = ToolSchema::new("test_tool", "A test tool");
-        
+
         assert_eq!(schema.name, "test_tool");
         assert_eq!(schema.description, "A test tool");
         assert!(schema.input_schema.is_object());
@@ -423,27 +429,29 @@ mod tests {
 
     #[tokio::test]
     async fn test_function_tool() {
-        let tool = function_tool(
-            "add",
-            "Add two numbers",
-            |args| {
-                let a = args.get("a")
-                    .and_then(|v| v.as_f64())
-                    .ok_or_else(|| crate::errors::FerricLinkError::validation("Missing or invalid 'a' parameter"))?;
-                let b = args.get("b")
-                    .and_then(|v| v.as_f64())
-                    .ok_or_else(|| crate::errors::FerricLinkError::validation("Missing or invalid 'b' parameter"))?;
-                Ok((a + b).to_string())
-            },
-        );
-        
+        let tool = function_tool("add", "Add two numbers", |args| {
+            let a = args.get("a").and_then(|v| v.as_f64()).ok_or_else(|| {
+                crate::errors::FerricLinkError::validation("Missing or invalid 'a' parameter")
+            })?;
+            let b = args.get("b").and_then(|v| v.as_f64()).ok_or_else(|| {
+                crate::errors::FerricLinkError::validation("Missing or invalid 'b' parameter")
+            })?;
+            Ok((a + b).to_string())
+        });
+
         assert_eq!(tool.name(), "add");
         assert_eq!(tool.description(), "Add two numbers");
-        
+
         let mut args = HashMap::new();
-        args.insert("a".to_string(), serde_json::Value::Number(serde_json::Number::from(5)));
-        args.insert("b".to_string(), serde_json::Value::Number(serde_json::Number::from(3)));
-        
+        args.insert(
+            "a".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(5)),
+        );
+        args.insert(
+            "b".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(3)),
+        );
+
         let result = tool.invoke(args, None).await.unwrap();
         assert_eq!(result.content, "8");
     }
@@ -451,31 +459,37 @@ mod tests {
     #[tokio::test]
     async fn test_tool_collection() {
         let mut collection = ToolCollection::new();
-        
+
         let add_tool = function_tool("add", "Add two numbers", |args| {
             let a = args.get("a").and_then(|v| v.as_f64()).unwrap_or(0.0);
             let b = args.get("b").and_then(|v| v.as_f64()).unwrap_or(0.0);
             Ok((a + b).to_string())
         });
-        
+
         let multiply_tool = function_tool("multiply", "Multiply two numbers", |args| {
             let a = args.get("a").and_then(|v| v.as_f64()).unwrap_or(1.0);
             let b = args.get("b").and_then(|v| v.as_f64()).unwrap_or(1.0);
             Ok((a * b).to_string())
         });
-        
+
         collection.add_tool(add_tool);
         collection.add_tool(multiply_tool);
-        
+
         assert_eq!(collection.len(), 2);
         assert!(!collection.is_empty());
         assert!(collection.tool_names().contains(&"add"));
         assert!(collection.tool_names().contains(&"multiply"));
-        
+
         let mut args = HashMap::new();
-        args.insert("a".to_string(), serde_json::Value::Number(serde_json::Number::from(4)));
-        args.insert("b".to_string(), serde_json::Value::Number(serde_json::Number::from(5)));
-        
+        args.insert(
+            "a".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(4)),
+        );
+        args.insert(
+            "b".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(5)),
+        );
+
         let result = collection.invoke_tool("add", args, None).await.unwrap();
         assert_eq!(result.content, "9");
     }
@@ -484,10 +498,10 @@ mod tests {
     async fn test_runnable_tool() {
         let tool = function_tool("test", "Test tool", |_| Ok("test result".to_string()));
         let runnable_tool = RunnableTool::new(tool, "call_123");
-        
+
         let args = HashMap::new();
         let result = runnable_tool.invoke(args, None).await.unwrap();
-        
+
         assert_eq!(result.tool_call_id, "call_123");
         assert_eq!(result.content, "test result");
     }

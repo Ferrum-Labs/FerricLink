@@ -6,18 +6,18 @@ use std::collections::HashMap;
 use crate::errors::{FerricLinkError, Result};
 
 /// Trait for objects that can be serialized and deserialized
-/// 
+///
 /// This trait provides a standardized way to serialize FerricLink objects
 /// to and from various formats, similar to LangChain's Serializable interface.
 pub trait Serializable: Serialize + for<'de> Deserialize<'de> + Send + Sync + 'static {
     /// Get the namespace for this serializable object
-    /// 
+    ///
     /// The namespace is used to identify the type of object when deserializing.
     /// It should be a hierarchical path like ["ferriclink", "messages", "human"].
     fn namespace() -> Vec<String>;
 
     /// Check if this object is serializable
-    /// 
+    ///
     /// By default, all objects implementing this trait are serializable.
     /// Override this method to provide custom serialization logic.
     fn is_serializable() -> bool {
@@ -58,7 +58,7 @@ pub trait Serializable: Serialize + for<'de> Deserialize<'de> + Send + Sync + 's
     }
 
     /// Get the type name for this serializable object
-    /// 
+    ///
     /// This is used for type identification during serialization/deserialization.
     fn type_name() -> &'static str {
         std::any::type_name::<Self>()
@@ -66,7 +66,7 @@ pub trait Serializable: Serialize + for<'de> Deserialize<'de> + Send + Sync + 's
 }
 
 /// Helper macro to implement Serializable for a type
-/// 
+///
 /// This macro provides a default implementation of the Serializable trait
 /// for types that derive Serialize and Deserialize.
 #[macro_export]

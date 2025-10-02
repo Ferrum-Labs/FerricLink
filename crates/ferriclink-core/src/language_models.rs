@@ -9,9 +9,9 @@ use std::collections::HashMap;
 use std::pin::Pin;
 
 use crate::errors::Result;
+use crate::impl_serializable;
 use crate::messages::AnyMessage;
 use crate::runnables::RunnableConfig;
-use crate::impl_serializable;
 
 /// Configuration for language model generation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -98,7 +98,10 @@ impl GenerationConfig {
     }
 }
 
-impl_serializable!(GenerationConfig, ["ferriclink", "language_models", "generation_config"]);
+impl_serializable!(
+    GenerationConfig,
+    ["ferriclink", "language_models", "generation_config"]
+);
 
 /// A generation result from a language model
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -224,7 +227,9 @@ pub trait BaseLLM: BaseLanguageModel {
     ) -> Result<Vec<LLMResult>> {
         let mut results = Vec::new();
         for prompt in prompts {
-            let result = self.generate(&prompt, config.clone(), runnable_config.clone()).await?;
+            let result = self
+                .generate(&prompt, config.clone(), runnable_config.clone())
+                .await?;
             results.push(result);
         }
         Ok(results)
@@ -239,7 +244,10 @@ pub trait BaseLLM: BaseLanguageModel {
     ) -> Result<Pin<Box<dyn futures::Stream<Item = Result<Generation>> + Send>>> {
         // Default implementation just yields the single result
         let result = self.generate(prompt, config, runnable_config).await?;
-        let generation = result.generations.into_iter().next()
+        let generation = result
+            .generations
+            .into_iter()
+            .next()
             .and_then(|gens| gens.into_iter().next())
             .unwrap_or_else(|| Generation::new(""));
         let stream = futures::stream::once(async { Ok(generation) });
@@ -267,7 +275,9 @@ pub trait BaseChatModel: BaseLanguageModel {
     ) -> Result<Vec<AnyMessage>> {
         let mut results = Vec::new();
         for messages in conversations {
-            let result = self.generate_chat(messages, config.clone(), runnable_config.clone()).await?;
+            let result = self
+                .generate_chat(messages, config.clone(), runnable_config.clone())
+                .await?;
             results.push(result);
         }
         Ok(results)
@@ -281,7 +291,9 @@ pub trait BaseChatModel: BaseLanguageModel {
         runnable_config: Option<RunnableConfig>,
     ) -> Result<Pin<Box<dyn futures::Stream<Item = Result<AnyMessage>> + Send>>> {
         // Default implementation just yields the single result
-        let result = self.generate_chat(messages, config, runnable_config).await?;
+        let result = self
+            .generate_chat(messages, config, runnable_config)
+            .await?;
         let stream = futures::stream::once(async { Ok(result) });
         Ok(Box::pin(stream))
     }
@@ -315,7 +327,9 @@ impl MockLLM {
         if self.responses.is_empty() {
             "Mock response".to_string()
         } else {
-            let index = self.current_index.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let index = self
+                .current_index
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             self.responses[index % self.responses.len()].clone()
         }
     }
@@ -378,7 +392,9 @@ impl MockChatModel {
         if self.responses.is_empty() {
             "Mock chat response".to_string()
         } else {
-            let index = self.current_index.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let index = self
+                .current_index
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             self.responses[index % self.responses.len()].clone()
         }
     }
@@ -425,9 +441,9 @@ pub fn mock_chat_model(model_name: impl Into<String>) -> MockChatModel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::serializable::Serializable;
     use crate::messages::BaseMessage;
-    
+    use crate::serializable::Serializable;
+
     #[test]
     fn test_generation_config() {
         let config = GenerationConfig::new()
@@ -435,7 +451,7 @@ mod tests {
             .with_max_tokens(100)
             .with_stop("STOP")
             .with_streaming(true);
-        
+
         assert_eq!(config.temperature, Some(0.8));
         assert_eq!(config.max_tokens, Some(100));
         assert!(config.stop.contains(&"STOP".to_string()));
@@ -451,9 +467,12 @@ mod tests {
 
     #[test]
     fn test_llm_result() {
-        let generations = vec![vec![Generation::new("Hello")], vec![Generation::new("World")]];
+        let generations = vec![
+            vec![Generation::new("Hello")],
+            vec![Generation::new("World")],
+        ];
         let result = LLMResult::new(generations);
-        
+
         assert_eq!(result.generations.len(), 2);
         assert_eq!(result.first_text(), Some("Hello"));
         assert_eq!(result.all_texts(), vec!["Hello", "World"]);
@@ -464,14 +483,14 @@ mod tests {
         let llm = MockLLM::new("test-model")
             .add_response("Response 1")
             .add_response("Response 2");
-        
+
         assert_eq!(llm.model_name(), "test-model");
         assert_eq!(llm.model_type(), "mock_llm");
         assert!(llm.supports_streaming());
-        
+
         let result = llm.generate("test prompt", None, None).await.unwrap();
         assert_eq!(result.first_text(), Some("Response 1"));
-        
+
         let result2 = llm.generate("test prompt", None, None).await.unwrap();
         assert_eq!(result2.first_text(), Some("Response 2"));
     }
@@ -481,13 +500,16 @@ mod tests {
         let chat_model = MockChatModel::new("test-chat-model")
             .add_response("Chat response 1")
             .add_response("Chat response 2");
-        
+
         assert_eq!(chat_model.model_name(), "test-chat-model");
         assert_eq!(chat_model.model_type(), "mock_chat_model");
         assert!(chat_model.supports_streaming());
-        
+
         let messages = vec![AnyMessage::human("Hello")];
-        let result = chat_model.generate_chat(messages, None, None).await.unwrap();
+        let result = chat_model
+            .generate_chat(messages, None, None)
+            .await
+            .unwrap();
         assert!(result.is_ai());
         assert_eq!(result.text(), "Chat response 1");
     }
@@ -497,10 +519,10 @@ mod tests {
         let llm = MockLLM::new("test-model")
             .add_response("Response 1")
             .add_response("Response 2");
-        
+
         let prompts = vec!["prompt 1".to_string(), "prompt 2".to_string()];
         let results = llm.generate_batch(prompts, None, None).await.unwrap();
-        
+
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].first_text(), Some("Response 1"));
         assert_eq!(results[1].first_text(), Some("Response 2"));
@@ -511,13 +533,16 @@ mod tests {
         let chat_model = MockChatModel::new("test-chat-model")
             .add_response("Chat 1")
             .add_response("Chat 2");
-        
+
         let conversations = vec![
             vec![AnyMessage::human("Hello 1")],
             vec![AnyMessage::human("Hello 2")],
         ];
-        let results = chat_model.generate_chat_batch(conversations, None, None).await.unwrap();
-        
+        let results = chat_model
+            .generate_chat_batch(conversations, None, None)
+            .await
+            .unwrap();
+
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].text(), "Chat 1");
         assert_eq!(results[1].text(), "Chat 2");

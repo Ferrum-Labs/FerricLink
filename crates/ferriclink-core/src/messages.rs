@@ -24,18 +24,14 @@ pub enum MessageContent {
 #[serde(tag = "type")]
 pub enum ContentBlock {
     /// Text content block
-    Text {
-        text: String,
-    },
+    Text { text: String },
     /// Image content block
     Image {
         image_url: String,
         alt_text: Option<String>,
     },
     /// JSON content block
-    Json {
-        data: serde_json::Value,
-    },
+    Json { data: serde_json::Value },
     /// Tool call content block
     ToolCall {
         id: String,
@@ -73,17 +69,15 @@ pub trait BaseMessage: Send + Sync {
     fn text(&self) -> String {
         match self.content() {
             MessageContent::Text(text) => text.clone(),
-            MessageContent::Blocks(blocks) => {
-                blocks
-                    .iter()
-                    .filter_map(|block| match block {
-                        ContentBlock::Text { text } => Some(text.clone()),
-                        ContentBlock::ToolResult { content, .. } => Some(content.clone()),
-                        _ => None,
-                    })
-                    .collect::<Vec<_>>()
-                    .join("")
-            }
+            MessageContent::Blocks(blocks) => blocks
+                .iter()
+                .filter_map(|block| match block {
+                    ContentBlock::Text { text } => Some(text.clone()),
+                    ContentBlock::ToolResult { content, .. } => Some(content.clone()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+                .join(""),
         }
     }
 
@@ -462,7 +456,7 @@ impl_serializable!(AnyMessage, ["ferriclink", "messages", "any"]);
 /// Helper function to convert messages to a string representation
 pub fn get_buffer_string(messages: &[AnyMessage], human_prefix: &str, ai_prefix: &str) -> String {
     let mut buffer = String::new();
-    
+
     for message in messages {
         match message {
             AnyMessage::Human(msg) => {
@@ -489,7 +483,7 @@ pub fn get_buffer_string(messages: &[AnyMessage], human_prefix: &str, ai_prefix:
             }
         }
     }
-    
+
     buffer
 }
 
@@ -542,7 +536,7 @@ mod tests {
     fn test_any_message() {
         let human = AnyMessage::human("Hello");
         let ai = AnyMessage::ai("Hi there!");
-        
+
         assert!(human.is_human());
         assert!(ai.is_ai());
     }
@@ -550,24 +544,23 @@ mod tests {
     #[test]
     fn test_message_content_blocks() {
         let blocks = vec![
-            ContentBlock::Text { text: "Hello".to_string() },
-            ContentBlock::Image { 
+            ContentBlock::Text {
+                text: "Hello".to_string(),
+            },
+            ContentBlock::Image {
                 image_url: "https://example.com/image.jpg".to_string(),
                 alt_text: Some("An image".to_string()),
             },
         ];
-        
+
         let msg = HumanMessage::new_with_blocks(blocks);
         assert_eq!(msg.text(), "Hello");
     }
 
     #[test]
     fn test_get_buffer_string() {
-        let messages = vec![
-            AnyMessage::human("Hello"),
-            AnyMessage::ai("Hi there!"),
-        ];
-        
+        let messages = vec![AnyMessage::human("Hello"), AnyMessage::ai("Hi there!")];
+
         let buffer = get_buffer_string(&messages, "Human", "Assistant");
         assert!(buffer.contains("Human: Hello"));
         assert!(buffer.contains("Assistant: Hi there!"));

@@ -27,7 +27,10 @@ pub fn print_bold_text(text: &str) {
 }
 
 /// Get color mapping for items
-pub fn get_color_mapping(items: &[String], excluded_colors: Option<&[String]>) -> std::collections::HashMap<String, String> {
+pub fn get_color_mapping(
+    items: &[String],
+    excluded_colors: Option<&[String]>,
+) -> std::collections::HashMap<String, String> {
     let available_colors = vec![
         "blue".to_string(),
         "yellow".to_string(),
@@ -35,18 +38,18 @@ pub fn get_color_mapping(items: &[String], excluded_colors: Option<&[String]>) -
         "green".to_string(),
         "red".to_string(),
     ];
-    
+
     let mut colors = available_colors;
     if let Some(excluded) = excluded_colors {
         colors.retain(|c| !excluded.contains(c));
     }
-    
+
     let mut mapping = std::collections::HashMap::new();
     for (i, item) in items.iter().enumerate() {
         let color = &colors[i % colors.len()];
         mapping.insert(item.clone(), color.clone());
     }
-    
+
     mapping
 }
 

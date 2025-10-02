@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use crate::errors::Result;
 use crate::impl_serializable;
-use crate::utils::{print_colored_text, print_bold_text, colors};
+use crate::utils::{colors, print_bold_text, print_colored_text};
 
 /// A run ID for tracking execution
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -111,7 +111,11 @@ impl RunInfo {
     pub fn complete_with_output(mut self, output: serde_json::Value) -> Self {
         self.output = Some(output);
         self.end_time = Some(chrono::Utc::now());
-        self.duration = Some((self.end_time.unwrap() - self.start_time).to_std().unwrap_or_default());
+        self.duration = Some(
+            (self.end_time.unwrap() - self.start_time)
+                .to_std()
+                .unwrap_or_default(),
+        );
         self
     }
 
@@ -119,7 +123,11 @@ impl RunInfo {
     pub fn complete_with_error(mut self, error: impl Into<String>) -> Self {
         self.error = Some(error.into());
         self.end_time = Some(chrono::Utc::now());
-        self.duration = Some((self.end_time.unwrap() - self.start_time).to_std().unwrap_or_default());
+        self.duration = Some(
+            (self.end_time.unwrap() - self.start_time)
+                .to_std()
+                .unwrap_or_default(),
+        );
         self
     }
 
@@ -210,7 +218,7 @@ pub struct ConsoleCallbackHandler {
 impl ConsoleCallbackHandler {
     /// Create a new console callback handler
     pub fn new() -> Self {
-        Self { 
+        Self {
             verbose: false,
             color: None,
         }
@@ -218,7 +226,7 @@ impl ConsoleCallbackHandler {
 
     /// Create a new console callback handler with verbosity setting
     pub fn new_with_verbose(verbose: bool) -> Self {
-        Self { 
+        Self {
             verbose,
             color: None,
         }
@@ -253,35 +261,35 @@ impl CallbackHandler for ConsoleCallbackHandler {
         // Match LangChain's format: "> Entering new {name} chain..."
         let message = format!("\n\n> Entering new {} chain...", run_info.name);
         print_bold_text(&message);
-        
+
         if self.verbose {
             println!("   Input: {}", run_info.input);
             if !run_info.tags.is_empty() {
                 println!("   Tags: {:?}", run_info.tags);
             }
         }
-        
+
         Ok(())
     }
 
     async fn on_run_success(&self, run_info: &RunInfo) -> Result<()> {
         // Match LangChain's format: "> Finished chain."
         print_bold_text("\n> Finished chain.");
-        
+
         if self.verbose {
             if let Some(output) = &run_info.output {
                 let color = self.color.as_deref();
                 print_colored_text(&format!("   Output: {}", output), color);
             }
         }
-        
+
         Ok(())
     }
 
     async fn on_run_error(&self, run_info: &RunInfo) -> Result<()> {
         let error_msg = run_info.error.as_deref().unwrap_or("Unknown error");
         print_colored_text(&format!("\n> Error: {}", error_msg), Some(colors::RED));
-        
+
         Ok(())
     }
 
@@ -292,7 +300,10 @@ impl CallbackHandler for ConsoleCallbackHandler {
     }
 
     async fn on_run_cancel(&self, run_info: &RunInfo) -> Result<()> {
-        print_colored_text(&format!("\n> Run {} was cancelled", run_info.run_id.id), Some(colors::YELLOW));
+        print_colored_text(
+            &format!("\n> Run {} was cancelled", run_info.run_id.id),
+            Some(colors::YELLOW),
+        );
         Ok(())
     }
 }
@@ -385,7 +396,8 @@ impl CallbackHandler for MemoryCallbackHandler {
 
     async fn on_run_success(&self, run_info: &RunInfo) -> Result<()> {
         // Update the existing run info
-        if let Some(existing_run) = self.runs
+        if let Some(existing_run) = self
+            .runs
             .write()
             .await
             .iter_mut()
@@ -398,7 +410,8 @@ impl CallbackHandler for MemoryCallbackHandler {
 
     async fn on_run_error(&self, run_info: &RunInfo) -> Result<()> {
         // Update the existing run info
-        if let Some(existing_run) = self.runs
+        if let Some(existing_run) = self
+            .runs
             .write()
             .await
             .iter_mut()
@@ -506,8 +519,13 @@ pub fn colored_console_callback_handler(color: impl Into<String>) -> Arc<Console
 }
 
 /// Helper function to create a verbose colored console callback handler
-pub fn verbose_colored_console_callback_handler(verbose: bool, color: impl Into<String>) -> Arc<ConsoleCallbackHandler> {
-    Arc::new(ConsoleCallbackHandler::new_with_verbose_and_color(verbose, color))
+pub fn verbose_colored_console_callback_handler(
+    verbose: bool,
+    color: impl Into<String>,
+) -> Arc<ConsoleCallbackHandler> {
+    Arc::new(ConsoleCallbackHandler::new_with_verbose_and_color(
+        verbose, color,
+    ))
 }
 
 /// Helper function to create a memory callback handler
@@ -595,7 +613,10 @@ mod tests {
         handler.on_run_start(&run_info).await.unwrap();
         handler.on_run_success(&run_info).await.unwrap();
         handler.on_run_error(&run_info).await.unwrap();
-        handler.on_run_stream(&run_info, &serde_json::json!("chunk")).await.unwrap();
+        handler
+            .on_run_stream(&run_info, &serde_json::json!("chunk"))
+            .await
+            .unwrap();
         handler.on_run_cancel(&run_info).await.unwrap();
     }
 

@@ -25,7 +25,7 @@ pub use serializable::Serializable;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Initialize the FerricLink Core crate
-/// 
+///
 /// This function should be called early in your application to set up
 /// logging and other global configurations.
 pub fn init() -> Result<()> {

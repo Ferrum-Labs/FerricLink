@@ -9,8 +9,8 @@ use std::collections::HashMap;
 
 use crate::documents::Document;
 use crate::errors::Result;
-use crate::runnables::{Runnable, RunnableConfig};
 use crate::impl_serializable;
+use crate::runnables::{Runnable, RunnableConfig};
 use crate::vectorstores::VectorStore;
 
 /// A retriever result containing documents and metadata
@@ -59,7 +59,10 @@ impl RetrieverResult {
     }
 }
 
-impl_serializable!(RetrieverResult, ["ferriclink", "retrievers", "retriever_result"]);
+impl_serializable!(
+    RetrieverResult,
+    ["ferriclink", "retrievers", "retriever_result"]
+);
 
 /// Base trait for all retrievers
 #[async_trait]
@@ -141,11 +144,7 @@ impl VectorStoreRetriever {
         self.search_kwargs
             .get("filter")
             .and_then(|v| v.as_object())
-            .map(|obj| {
-                obj.iter()
-                    .map(|(k, v)| (k.clone(), v.clone()))
-                    .collect()
-            })
+            .map(|obj| obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
     }
 }
 
@@ -270,36 +269,39 @@ impl MultiRetriever {
             CombineMethod::Union => {
                 let mut all_documents = Vec::new();
                 let mut combined_metadata = HashMap::new();
-                
+
                 for result in results {
                     all_documents.extend(result.documents);
                     combined_metadata.extend(result.metadata);
                 }
-                
+
                 RetrieverResult::new_with_metadata(all_documents, combined_metadata)
             }
             CombineMethod::Intersection => {
                 if results.is_empty() {
                     return RetrieverResult::new(Vec::new());
                 }
-                
+
                 let mut intersection = results[0].documents.clone();
                 for result in results.iter().skip(1) {
                     intersection.retain(|doc| {
-                        result.documents.iter().any(|other_doc| {
-                            doc.page_content == other_doc.page_content
-                        })
+                        result
+                            .documents
+                            .iter()
+                            .any(|other_doc| doc.page_content == other_doc.page_content)
                     });
                 }
-                
+
                 RetrieverResult::new(intersection)
             }
-            CombineMethod::First => {
-                results.into_iter().next().unwrap_or_else(|| RetrieverResult::new(Vec::new()))
-            }
-            CombineMethod::Last => {
-                results.into_iter().last().unwrap_or_else(|| RetrieverResult::new(Vec::new()))
-            }
+            CombineMethod::First => results
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| RetrieverResult::new(Vec::new())),
+            CombineMethod::Last => results
+                .into_iter()
+                .last()
+                .unwrap_or_else(|| RetrieverResult::new(Vec::new())),
         }
     }
 }
@@ -312,12 +314,14 @@ impl BaseRetriever for MultiRetriever {
         config: Option<RunnableConfig>,
     ) -> Result<RetrieverResult> {
         let mut results = Vec::new();
-        
+
         for retriever in &self.retrievers {
-            let result = retriever.get_relevant_documents(query, config.clone()).await?;
+            let result = retriever
+                .get_relevant_documents(query, config.clone())
+                .await?;
             results.push(result);
         }
-        
+
         Ok(self.combine_results(results))
     }
 }
@@ -343,12 +347,9 @@ mod tests {
 
     #[test]
     fn test_retriever_result() {
-        let docs = vec![
-            Document::new("Document 1"),
-            Document::new("Document 2"),
-        ];
+        let docs = vec![Document::new("Document 1"), Document::new("Document 2")];
         let result = RetrieverResult::new(docs.clone());
-        
+
         assert_eq!(result.documents, docs);
         assert_eq!(result.len(), 2);
         assert!(!result.is_empty());
@@ -357,7 +358,7 @@ mod tests {
     #[tokio::test]
     async fn test_vector_store_retriever() {
         let vector_store = Box::new(InMemoryVectorStore::new());
-        
+
         // Add some documents to the vector store
         let docs = vec![
             Document::new("Hello world"),
@@ -365,12 +366,15 @@ mod tests {
             Document::new("Python is great"),
         ];
         vector_store.add_documents(docs, None).await.unwrap();
-        
+
         // Create retriever
         let retriever = VectorStoreRetriever::new(vector_store);
-        
+
         // Retrieve documents
-        let result = retriever.get_relevant_documents("Hello", None).await.unwrap();
+        let result = retriever
+            .get_relevant_documents("Hello", None)
+            .await
+            .unwrap();
         assert!(!result.is_empty());
         assert_eq!(result.len(), 3); // Only 3 documents in store
     }
@@ -378,22 +382,27 @@ mod tests {
     #[tokio::test]
     async fn test_vector_store_retriever_default_k() {
         let vector_store = Box::new(InMemoryVectorStore::new());
-        
+
         // Add some documents to the vector store
         let docs = vec![
             Document::new("Hello world"),
             Document::new("Rust is awesome"),
             Document::new("Python is great"),
             Document::new("Check out FerricLink!"),
-            Document::new("FerricLink is a Rust library for building AI applications, inspired by LangChain."),
+            Document::new(
+                "FerricLink is a Rust library for building AI applications, inspired by LangChain.",
+            ),
         ];
         vector_store.add_documents(docs, None).await.unwrap();
-        
+
         // Create retriever
         let retriever = VectorStoreRetriever::new(vector_store);
-        
+
         // Retrieve documents
-        let result = retriever.get_relevant_documents("Hello", None).await.unwrap();
+        let result = retriever
+            .get_relevant_documents("Hello", None)
+            .await
+            .unwrap();
         assert!(!result.is_empty());
         assert_eq!(result.len(), 4); // Only 4 documents retrieved by default with k=4
     }
@@ -401,19 +410,22 @@ mod tests {
     #[tokio::test]
     async fn test_vector_store_retriever_with_kwargs() {
         let vector_store = Box::new(InMemoryVectorStore::new());
-        
-        let docs = vec![
-            Document::new("Document 1"),
-            Document::new("Document 2"),
-        ];
+
+        let docs = vec![Document::new("Document 1"), Document::new("Document 2")];
         vector_store.add_documents(docs, None).await.unwrap();
-        
+
         let mut search_kwargs = HashMap::new();
-        search_kwargs.insert("k".to_string(), serde_json::Value::Number(serde_json::Number::from(1)));
-        
+        search_kwargs.insert(
+            "k".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(1)),
+        );
+
         let retriever = VectorStoreRetriever::new_with_kwargs(vector_store, search_kwargs);
-        
-        let result = retriever.get_relevant_documents("Document", None).await.unwrap();
+
+        let result = retriever
+            .get_relevant_documents("Document", None)
+            .await
+            .unwrap();
         assert_eq!(result.len(), 1);
     }
 
@@ -422,8 +434,11 @@ mod tests {
         let vector_store = Box::new(InMemoryVectorStore::new());
         let retriever = VectorStoreRetriever::new(vector_store);
         let runnable_retriever = RunnableRetriever::new(retriever);
-        
-        let result = runnable_retriever.invoke("test query".to_string(), None).await.unwrap();
+
+        let result = runnable_retriever
+            .invoke("test query".to_string(), None)
+            .await
+            .unwrap();
         assert!(result.is_empty()); // Empty vector store
     }
 
@@ -431,20 +446,26 @@ mod tests {
     async fn test_multi_retriever_union() {
         let vector_store1 = Box::new(InMemoryVectorStore::new());
         let vector_store2 = Box::new(InMemoryVectorStore::new());
-        
+
         // Add different documents to each store
-        vector_store1.add_documents(vec![Document::new("Store 1 doc")], None).await.unwrap();
-        vector_store2.add_documents(vec![Document::new("Store 2 doc")], None).await.unwrap();
-        
+        vector_store1
+            .add_documents(vec![Document::new("Store 1 doc")], None)
+            .await
+            .unwrap();
+        vector_store2
+            .add_documents(vec![Document::new("Store 2 doc")], None)
+            .await
+            .unwrap();
+
         let retriever1 = VectorStoreRetriever::new(vector_store1);
         let retriever2 = VectorStoreRetriever::new(vector_store2);
-        
-        let multi_retriever = MultiRetriever::new(vec![
-            Box::new(retriever1),
-            Box::new(retriever2),
-        ]);
-        
-        let result = multi_retriever.get_relevant_documents("doc", None).await.unwrap();
+
+        let multi_retriever = MultiRetriever::new(vec![Box::new(retriever1), Box::new(retriever2)]);
+
+        let result = multi_retriever
+            .get_relevant_documents("doc", None)
+            .await
+            .unwrap();
         assert_eq!(result.len(), 2); // Union of both results
     }
 
@@ -452,19 +473,28 @@ mod tests {
     async fn test_multi_retriever_first() {
         let vector_store1 = Box::new(InMemoryVectorStore::new());
         let vector_store2 = Box::new(InMemoryVectorStore::new());
-        
-        vector_store1.add_documents(vec![Document::new("First doc")], None).await.unwrap();
-        vector_store2.add_documents(vec![Document::new("Second doc")], None).await.unwrap();
-        
+
+        vector_store1
+            .add_documents(vec![Document::new("First doc")], None)
+            .await
+            .unwrap();
+        vector_store2
+            .add_documents(vec![Document::new("Second doc")], None)
+            .await
+            .unwrap();
+
         let retriever1 = VectorStoreRetriever::new(vector_store1);
         let retriever2 = VectorStoreRetriever::new(vector_store2);
-        
+
         let multi_retriever = MultiRetriever::new_with_method(
             vec![Box::new(retriever1), Box::new(retriever2)],
             CombineMethod::First,
         );
-        
-        let result = multi_retriever.get_relevant_documents("doc", None).await.unwrap();
+
+        let result = multi_retriever
+            .get_relevant_documents("doc", None)
+            .await
+            .unwrap();
         assert_eq!(result.len(), 1); // Only first retriever's results
     }
 
