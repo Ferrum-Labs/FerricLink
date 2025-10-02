@@ -4,7 +4,6 @@ Thank you for your interest in contributing to FerricLink! This document provide
 
 ## Table of Contents
 
-- [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
 - [Making Changes](#making-changes)
@@ -12,10 +11,6 @@ Thank you for your interest in contributing to FerricLink! This document provide
 - [Documentation](#documentation)
 - [Submitting Changes](#submitting-changes)
 - [Release Process](#release-process)
-
-## Code of Conduct
-
-This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ## Getting Started
 
@@ -253,7 +248,6 @@ We use semantic versioning (semver):
 
 - **GitHub Issues**: For bug reports and feature requests
 - **Discussions**: For questions and general discussion
-- **Email**: [maintainers@ferrumlabs.com](mailto:maintainers@ferrumlabs.com)
 
 ## Recognition
 
