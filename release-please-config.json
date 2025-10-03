@@ -1,19 +1,21 @@
 {
-    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
-    "includeComponentInTag": false,
-    "packages": {
-      "crates/ferriclink-core": {
-        "release-type": "rust",
-        "bump-minor-pre-major": true
-      }
-    },
-    "changelog-sections": [
-      { "type": "feat",     "section": "Features",     "hidden": false },
-      { "type": "fix",      "section": "Bug Fixes",    "hidden": false },
-      { "type": "perf",     "section": "Performance",  "hidden": false },
-      { "type": "refactor", "section": "Refactors",    "hidden": false },
-      { "type": "docs",     "section": "Docs",         "hidden": false },
-      { "type": "chore",    "section": "Chores",       "hidden": false }
-    ]
-  }
-  
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "includeComponentInTag": false,
+  "includeVInTag": true,
+  "packages": {
+    "crates/ferriclink-core": {
+      "release-type": "rust",
+      "includeComponentInTag": false,
+      "includeVInTag": true,
+      "bump-minor-pre-major": true
+    }
+  },
+  "changelog-sections": [
+    { "type": "feat",     "section": "Features",     "hidden": false },
+    { "type": "fix",      "section": "Bug Fixes",    "hidden": false },
+    { "type": "perf",     "section": "Performance",  "hidden": false },
+    { "type": "refactor", "section": "Refactors",    "hidden": false },
+    { "type": "docs",     "section": "Docs",         "hidden": false },
+    { "type": "chore",    "section": "Chores",       "hidden": false }
+  ]
+}
