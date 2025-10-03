@@ -8,30 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial release of FerricLink Core
-- Core abstractions for AI applications inspired by LangChain
-- Comprehensive callback system for monitoring and tracing
-- Document processing and management capabilities
-- Language model abstractions (LLM and Chat models)
-- Message system with support for various message types
-- Runnable trait system for composable units of work
-- Vector store abstractions for embeddings and similarity search
-- Tool system for function calling and execution
-- Retriever system for document retrieval
-- Serialization framework for data persistence
-- Utility functions for color output and text formatting
+- **Structured Query Language (SQL)**: Internal representation for building composable query expressions with visitor pattern support
+- **Exception System**: Comprehensive error handling with LangChain-compatible error codes, troubleshooting URLs, and specialized exception types
+- **Environment Information**: Runtime environment details including OS, architecture, Rust version, compiler info, and enabled features
+- **Rate Limiting**: Token bucket algorithm for controlling request rates with retry logic, exponential backoff, and serializable configuration
+- **Caching System**: In-memory and TTL caches for LLM responses with LRU eviction, performance monitoring, and thread-safe operations
+- **Example Selectors**: Few-shot learning with length-based, semantic similarity, and MMR example selection for dynamic prompt construction
+- **Global Configuration**: Application-wide settings for verbose, debug, and LLM cache management with thread safety and convenience functions
+- Comprehensive documentation and usage examples for all new features
+- Integration with existing FerricLink Core ecosystem
 
 ### Features
-- **Callbacks**: Run tracking, console and memory handlers, callback management
-- **Documents**: Text processing, metadata management, chunking and joining
-- **Embeddings**: Vector operations, similarity calculations, mock implementations
-- **Language Models**: Base traits for LLMs and chat models with mock implementations
-- **Messages**: Human, AI, System, Tool, and AnyMessage types with content blocks
-- **Runnables**: Lambda, async, sequence, and parallel runnable implementations
-- **Vector Stores**: In-memory vector store with similarity search
-- **Tools**: Function tools, tool collections, and runnable tools
-- **Retrievers**: Vector store retrievers, multi-retrievers with combination methods
-- **Serialization**: JSON serialization/deserialization with namespace support
+- **Structured Query**: Visitor pattern, SQL/MongoDB translation, builders for common operations
+- **Exceptions**: Error codes, troubleshooting URLs, TracerException, OutputParserException with LLM feedback
+- **Environment**: Runtime info, feature detection, memory statistics, platform-specific details
+- **Rate Limiting**: Token bucket, burst capacity, retry logic, exponential backoff, serialization
+- **Caching**: In-memory cache, TTL cache, LRU eviction, cache statistics, async/sync support
+- **Example Selectors**: Length-based selection, semantic similarity, MMR, utility functions
+- **Global Config**: Thread-safe globals, verbose/debug modes, LLM cache management, convenience functions
+
+### Changed
+- Enhanced error handling with comprehensive error codes and troubleshooting URLs
+- Improved documentation with detailed guides for all new features
+- Updated lib.rs exports to include all new functionality
+- Enhanced init() function to initialize global configuration
+
+### Fixed
+- Remove duplicate nested changelog files
+- Fix workflow to update correct changelog files
+- Resolve all clippy warnings and test failures
 
 ## [0.1.3] - 2025-10-03
 
