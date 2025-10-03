@@ -11,10 +11,10 @@ const config: Config = {
   projectName: 'FerricLink',
   trailingSlash: false,
 
-  // keep strict link checking
+  // Keep strict link checking
   onBrokenLinks: 'throw',
 
-  // deprecation fix: move markdown hook here
+  // Docusaurus v3: move this deprecating option here
   markdown: {
     hooks: {
       onBrokenMarkdownLinks: 'warn',
@@ -37,6 +37,8 @@ const config: Config = {
           path: 'blog',
           routeBasePath: 'blog',
           showReadingTime: true,
+          // Silence the truncation warning for the placeholder post
+          onUntruncatedBlogPosts: 'ignore',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -45,7 +47,7 @@ const config: Config = {
     ],
   ],
 
-  // no redirects plugin needed
+  // No redirects plugin (it caused conflicts with /)
 
   themeConfig: {
     image: 'img/og.png',
@@ -60,7 +62,10 @@ const config: Config = {
       },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
-        { to: '/api/latest', label: 'API (Rust)', position: 'left' },
+
+        // IMPORTANT: use href for a static file route and include trailing slash
+        { href: '/FerricLink/api/latest/', label: 'API (Rust)', position: 'left' },
+
         { to: '/blog', label: 'Blog', position: 'left' },
         { href: 'https://github.com/Ferrum-Labs/FerricLink', label: 'GitHub', position: 'right' },
       ],
