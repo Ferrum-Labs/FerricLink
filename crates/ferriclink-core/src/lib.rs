@@ -29,7 +29,10 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// This function should be called early in your application to set up
 /// logging and other global configurations.
 pub fn init() -> Result<()> {
-    tracing_subscriber::fmt::init();
+    #[cfg(not(docsrs))]
+    {
+        tracing_subscriber::fmt::init();
+    }
     Ok(())
 }
 

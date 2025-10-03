@@ -15,8 +15,14 @@ rust-version.workspace = true
 
 [package.metadata.docs.rs]
 # Documentation configuration for docs.rs
-features = ["serde", "tokio", "tracing"]
+features = ["all"]
 rustdoc-args = ["--cfg", "docsrs"]
+# Add rustc args for docs.rs environment
+rustc-args = ["--cfg", "docsrs"]
+# Target configuration for docs.rs
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "aarch64-apple-darwin", "aarch64-windows-msvc", "x86_64-windows-msvc"]
+# Disable some features that might cause issues in docs.rs
+default-target = "x86_64-unknown-linux-gnu"
 
 [dependencies]
 # Serialization and data structures
