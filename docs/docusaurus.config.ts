@@ -64,7 +64,7 @@ const config: Config = {
         { to: '/docs', label: 'Docs', position: 'left' },
 
         // IMPORTANT: use href for a static file route and include trailing slash
-        { href: '/FerricLink/api/latest/', label: 'API (Rust)', position: 'left' },
+        { href: '/api/latest/', label: 'API (Rust)', position: 'left' },
 
         { to: '/blog', label: 'Blog', position: 'left' },
         { href: 'https://github.com/Ferrum-Labs/FerricLink', label: 'GitHub', position: 'right' },
