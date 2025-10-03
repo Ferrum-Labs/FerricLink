@@ -128,11 +128,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+
+      # Cache the npm cache folder (works without a lockfile)
+      - name: Cache npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-20-${{ hashFiles('docs/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-20-
 
       - name: Install deps
         working-directory: docs
-        run: npm ci
+        env:
+          npm_config_cache: ~/.npm
+        run: npm install --no-audit --no-fund
 
       - name: Build Docusaurus
         working-directory: docs
