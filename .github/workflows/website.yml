@@ -1,0 +1,75 @@
+name: Website
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---- Rust docs at repo root ----
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build rustdoc
+        env:
+          RUSTDOCFLAGS: --cfg docsrs
+          RUSTFLAGS: --cfg docsrs
+        run: |
+          cargo doc --workspace --all-features --no-deps
+          mkdir -p docs/static/api/latest
+          rm -rf docs/static/api/latest/*
+          cp -a target/doc/* docs/static/api/latest/
+          # ensure index.html exists for /api/latest/
+          if [ ! -f docs/static/api/latest/index.html ]; then
+            root=$(ls -1 docs/static/api/latest | head -n1)
+            echo '<meta http-equiv="refresh" content="0; url='"$root"'/">' > docs/static/api/latest/index.html
+          fi
+
+      # ---- Node/Docusaurus inside docs/ ----
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: docs/package.json
+
+      - name: Install deps
+        working-directory: docs
+        run: npm ci
+
+      - name: Build Docusaurus
+        working-directory: docs
+        run: npm run build
+
+      # ---- GitHub Pages ----
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
