@@ -24,7 +24,7 @@ Add FerricLink Core to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ferriclink-core = "0.1.0"
+ferriclink-core = { version = "0.1", features = ["all"] }
 ```
 
 ## Example
