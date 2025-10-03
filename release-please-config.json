@@ -3,10 +3,8 @@
   "includeComponentInTag": false,
   "includeVInTag": true,
   "packages": {
-    "crates/ferriclink-core": {
-      "release-type": "rust",
-      "includeComponentInTag": false,
-      "includeVInTag": true,
+    ".": {
+      "release-type": "rust-workspace",
       "bump-minor-pre-major": true
     }
   },
