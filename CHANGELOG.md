@@ -8,23 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial implementation of FerricLink Core
-- Core abstractions inspired by LangChain
-- Runnable trait system for composable AI workflows
-- Message types (Human, AI, System, Tool messages)
-- Language model abstractions (BaseLLM, BaseChatModel)
-- Vector store abstractions with in-memory implementation
-- Document handling and retrieval system
-- Callback system for monitoring and tracing
-- Tool system for function calling
-- Embeddings abstraction
-- Comprehensive test suite
-- Colored console output matching LangChain's style
-- Semantic versioning configuration
-- Justfile for development workflow
+- Comprehensive documentation website with Docusaurus
+- GitHub Actions workflows for CI/CD and website deployment
+- Release-please configuration for automated versioning
+- Rust toolchain configuration for consistent builds
+- Crate-level changelog for ferriclink-core
 
 ### Changed
-- N/A
+- Updated project metadata and dependencies
+- Improved README documentation
+- Enhanced workflow configurations
+- Optimized release-please configuration for workspace
+
+### Fixed
+- Configure docs.rs build compatibility
+- Add conditional compilation for tracing in docs.rs environment
+- Fix feature check in init() function
+- Correct release-please configuration for proper compatibility
 
 ### Deprecated
 - N/A
@@ -32,11 +32,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - N/A
 
-### Fixed
-- N/A
-
 ### Security
 - N/A
+
+## [0.1.3] - 2025-10-03
+
+### Fixed
+- Configure docs.rs build compatibility
+- Add conditional compilation for tracing in docs.rs environment
+- Fix feature check in init() function
+- Optimize release-please configuration for workspace
+- Correct release-please configuration for proper compatibility
+
+### Changed
+- Updated release-please configuration for better workspace management
+- Improved documentation build process
+- Enhanced CI/CD workflow configuration
+
+## [0.1.2] - 2025-10-02
+
+### Added
+- Comprehensive documentation website with Docusaurus
+- GitHub Actions workflows for CI/CD and website deployment
+- Release-please configuration for automated versioning
+- Rust toolchain configuration for consistent builds
+
+### Changed
+- Updated project metadata and dependencies
+- Improved README documentation
+- Enhanced workflow configurations
+
+## [0.1.1] - 2025-10-01
+
+### Added
+- Initial project setup and structure
+- Basic crate configuration
+- Core module implementations
 
 ## [0.1.0] - 2025-10-02
 
