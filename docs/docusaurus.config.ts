@@ -75,7 +75,7 @@ const config: Config = {
 
     prism: {
       theme: prismThemes.github,
-      darkTheme: prismThemes.darcula,
+      darkTheme: prismThemes.gruvboxMaterialDark,
       additionalLanguages: ['rust', 'toml', 'bash'],
     },
 

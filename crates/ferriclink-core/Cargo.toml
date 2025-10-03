@@ -71,6 +71,34 @@ all = ["http", "validation"]
 tokio-test = "0.4.4"
 criterion = "0.7.0"
 
+[[example]]
+name = "structured_query_usage"
+path = "examples/structured_query_usage.rs"
+
+[[example]]
+name = "exception_usage"
+path = "examples/exception_usage.rs"
+
+[[example]]
+name = "env_usage"
+path = "examples/env_usage.rs"
+
+[[example]]
+name = "rate_limiter_usage"
+path = "examples/rate_limiter_usage.rs"
+
+[[example]]
+name = "cache_usage"
+path = "examples/cache_usage.rs"
+
+[[example]]
+name = "example_selector_usage"
+path = "examples/example_selector_usage.rs"
+
+[[example]]
+name = "globals_usage"
+path = "examples/globals_usage.rs"
+
 # [[bench]]
 # name = "runnable_bench"
 # harness = false
