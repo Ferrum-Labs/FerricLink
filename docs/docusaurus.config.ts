@@ -6,18 +6,25 @@ const config: Config = {
   title: 'FerricLink',
   tagline: 'Rust-first building blocks inspired by LangChain & LangGraph',
   url: 'https://ferrum-labs.github.io',
-  baseUrl: '/FerricLink/', // GitHub Pages (project site)
+  baseUrl: '/FerricLink/',
   favicon: 'img/favicon.ico',
   organizationName: 'Ferrum-Labs',
   projectName: 'FerricLink',
   trailingSlash: false,
-  onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
 
-  i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+  // keep throwing for broken links; handled by core (not deprecated)
+  onBrokenLinks: 'throw',
+
+  // move deprecated onBrokenMarkdownLinks here:
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
+
+  onBrokenMarkdownLinks: undefined as unknown as never, // ensure old prop is not used
+
+  i18n: { defaultLocale: 'en', locales: ['en'] },
 
   // ——— Content presets ———
   presets: [
@@ -25,8 +32,7 @@ const config: Config = {
       'classic',
       {
         docs: {
-          // Docusaurus content lives in docs/docs/
-          path: 'docs',
+          path: 'docs',               // docs/docs/
           routeBasePath: 'docs',
           sidebarPath: require.resolve('./sidebars.ts'),
           editUrl: 'https://github.com/Ferrum-Labs/FerricLink/edit/main/docs/',
@@ -37,7 +43,6 @@ const config: Config = {
           showReadingTime: true,
         },
         theme: {
-          // Custom CSS in docs/src/css/custom.css
           customCss: require.resolve('./src/css/custom.css'),
         },
       },
@@ -48,25 +53,17 @@ const config: Config = {
   plugins: [
     [
       '@docusaurus/plugin-client-redirects',
-      {
-        redirects: [
-          // root → docs landing
-          { from: '/', to: '/docs' },
-        ],
-      },
+      { redirects: [{ from: '/', to: '/docs' }] },
     ],
   ],
 
   // ——— Theme / UI ———
   themeConfig: {
-    // Social share card (served from docs/static/img/og.png)
     image: 'img/og.png',
-
     metadata: [{ name: 'theme-color', content: '#0f172a' }],
 
     navbar: {
       title: 'FerricLink',
-      // Logos placed in docs/static/img/
       logo: {
         alt: 'FerricLink',
         src: 'img/logo-light.svg',
@@ -74,17 +71,13 @@ const config: Config = {
       },
       items: [
         { to: '/docs', label: 'Docs', position: 'left' },
-        // API (rustdoc) built into docs/static/api; /api/ shows version index; /api/latest/ points to latest
         { to: '/api/latest', label: 'API (Rust)', position: 'left' },
         { to: '/blog', label: 'Blog', position: 'left' },
         { href: 'https://github.com/Ferrum-Labs/FerricLink', label: 'GitHub', position: 'right' },
       ],
     },
 
-    colorMode: {
-      defaultMode: 'dark',
-      respectPrefersColorScheme: true,
-    },
+    colorMode: { defaultMode: 'dark', respectPrefersColorScheme: true },
 
     prism: {
       theme: prismThemes.github,
@@ -95,14 +88,8 @@ const config: Config = {
     footer: {
       style: 'dark',
       links: [
-        {
-          title: 'Docs',
-          items: [{ label: 'Getting Started', to: '/docs' }],
-        },
-        {
-          title: 'Community',
-          items: [{ label: 'GitHub', href: 'https://github.com/Ferrum-Labs/FerricLink' }],
-        },
+        { title: 'Docs', items: [{ label: 'Getting Started', to: '/docs' }] },
+        { title: 'Community', items: [{ label: 'GitHub', href: 'https://github.com/Ferrum-Labs/FerricLink' }] },
       ],
       copyright: `© ${new Date().getFullYear()} Ferrum Labs`,
     },
