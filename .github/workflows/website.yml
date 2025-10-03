@@ -24,16 +24,12 @@ jobs:
         with:
           fetch-depth: 0  # we need tags for the versions list
 
-      # ---- Build Rust API docs (nightly + docsrs) ----
-      - uses: dtolnay/rust-toolchain@nightly
+      # ---- Build Rust API docs (stable + docsrs) ----
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - name: Build rustdoc (nightly, docsrs)
-        env:
-          RUSTDOCFLAGS: --cfg docsrs
-          RUSTFLAGS: --cfg docsrs
-        run: |
-          cargo +nightly doc --workspace --all-features --no-deps
+      - name: Build rustdoc (stable)
+        run: cargo doc --workspace --all-features --no-deps
 
       - name: Stage API docs (versioned + latest)
         shell: bash
