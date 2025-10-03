@@ -70,7 +70,7 @@ use ferriclink_core::FerricLinkError;
 use std::sync::Arc;
 
 struct ResourceManager {
-    resources: Arc<Mutex<Vec<Resource>>>,
+    resources: Arc&lt;Mutex&lt;Vec&lt;Resource&gt;&gt;&gt;,
 }
 
 impl ResourceManager {

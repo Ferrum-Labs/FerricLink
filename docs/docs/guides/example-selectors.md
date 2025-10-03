@@ -148,7 +148,7 @@ impl FewShotLLM {
         &self,
         input: &str,
         max_examples: usize,
-    ) -> Result<String> {
+    ) -> Result&lt;String&gt; {
         let input_vars = [("input".to_string(), input.to_string())]
             .iter()
             .cloned()
@@ -188,7 +188,7 @@ struct DynamicPromptBuilder {
 }
 
 impl DynamicPromptBuilder {
-    async fn build_prompt(&self, input: &str) -> Result<String> {
+    async fn build_prompt(&self, input: &str) -> Result&lt;String&gt; {
         let input_vars = [("input".to_string(), input.to_string())]
             .iter()
             .cloned()
@@ -240,7 +240,7 @@ enum SelectionStrategy {
 }
 
 impl HybridExampleSelector {
-    async fn select_examples(&self, input: &Example) -> Result<Vec<Example>> {
+    async fn select_examples(&self, input: &Example) -> Result&lt;Vec&lt;Example&gt;&gt; {
         match self.strategy {
             SelectionStrategy::LengthOnly => {
                 self.length_selector.select_examples(input)
@@ -279,11 +279,11 @@ use std::collections::HashMap;
 
 struct CachedExampleSelector {
     selector: LengthBasedExampleSelector,
-    cache: HashMap<String, Vec<Example>>,
+    cache: HashMap&lt;String, Vec&lt;Example&gt;&gt;,
 }
 
 impl CachedExampleSelector {
-    fn select_examples_cached(&mut self, input: &Example) -> Result<Vec<Example>> {
+    fn select_examples_cached(&mut self, input: &Example) -> Result&lt;Vec&lt;Example&gt;&gt; {
         let input_key = self.input_to_key(input);
         
         if let Some(cached) = self.cache.get(&input_key) {
@@ -309,8 +309,8 @@ impl CachedExampleSelector {
 ```rust
 async fn process_batch(
     selector: &LengthBasedExampleSelector,
-    inputs: Vec<Example>,
-) -> Result<Vec<Vec<Example>>> {
+    inputs: Vec&lt;Example&gt;,
+) -> Result&lt;Vec&lt;Vec&lt;Example&gt;&gt;&gt; {
     let mut results = Vec::new();
     
     for input in inputs {
@@ -357,7 +357,7 @@ let selector = LengthBasedExampleSelector::new(examples, 100, Some(custom_length
 async fn robust_example_selection(
     selector: &impl BaseExampleSelector,
     input: &Example,
-) -> Result<Vec<Example>> {
+) -> Result&lt;Vec&lt;Example&gt;&gt; {
     // Try to select examples
     match selector.select_examples(input) {
         Ok(examples) if !examples.is_empty() => Ok(examples),
@@ -381,7 +381,7 @@ use std::time::Instant;
 
 async fn benchmark_selector(
     selector: &impl BaseExampleSelector,
-    inputs: Vec<Example>,
+    inputs: Vec&lt;Example&gt;,
 ) -> Result<()> {
     let start = Instant::now();
     

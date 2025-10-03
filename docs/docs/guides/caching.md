@@ -123,7 +123,7 @@ impl CachedLLM {
         &self,
         prompt: &str,
         llm_string: &str,
-    ) -> Result<Vec<Generation>> {
+    ) -> Result&lt;Vec&lt;Generation&gt;&gt; {
         // Check cache first
         if let Some(cached) = self.cache.alookup(prompt, llm_string).await? {
             return Ok(cached);
@@ -147,7 +147,7 @@ use ferriclink_core::{InMemoryCache, BaseCache, errors::Result};
 
 struct RobustCachedLLM {
     cache: InMemoryCache,
-    fallback_cache: Option<InMemoryCache>,
+    fallback_cache: Option&lt;InMemoryCache&gt;,
 }
 
 impl RobustCachedLLM {
@@ -155,7 +155,7 @@ impl RobustCachedLLM {
         &self,
         prompt: &str,
         llm_string: &str,
-    ) -> Result<Vec<Generation>> {
+    ) -> Result&lt;Vec&lt;Generation&gt;&gt; {
         // Try primary cache
         if let Some(cached) = self.cache.alookup(prompt, llm_string).await? {
             return Ok(cached);
@@ -220,7 +220,7 @@ async fn process_prompts_batch(
     cache: &InMemoryCache,
     prompts: Vec<&str>,
     llm_string: &str,
-) -> Result<Vec<Vec<Generation>>> {
+) -> Result&lt;Vec&lt;Vec&lt;Generation&gt;&gt;&gt; {
     let mut results = Vec::new();
     
     for prompt in prompts {
@@ -282,7 +282,7 @@ async fn safe_cache_lookup(
     cache: &InMemoryCache,
     prompt: &str,
     llm_string: &str,
-) -> Result<Option<Vec<Generation>>> {
+) -> Result&lt;Option&lt;Vec&lt;Generation&gt;&gt;&gt; {
     match cache.alookup(prompt, llm_string).await {
         Ok(result) => Ok(result),
         Err(e) => {
@@ -302,7 +302,7 @@ async fn safe_cache_lookup(
 | **Size Limits** | ✅ | ✅ (with LRU) |
 | **TTL Support** | ❌ | ✅ (`TtlCache`) |
 | **Statistics** | ❌ | ✅ (`CacheStats`) |
-| **Thread Safety** | ✅ | ✅ (Arc<RwLock>) |
+| **Thread Safety** | ✅ | ✅ (Arc&lt;RwLock&gt;) |
 | **Async Support** | ✅ | ✅ |
 | **Memory Efficiency** | Medium | High |
 | **Performance** | Medium | High |

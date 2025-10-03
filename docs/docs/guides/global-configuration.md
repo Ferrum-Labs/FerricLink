@@ -170,7 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```rust
 use ferriclink_core::{is_verbose, is_debug, has_llm_cache};
 
-fn process_request(input: &str) -> Result<String> {
+fn process_request(input: &str) -> Result&lt;String&gt; {
     if is_verbose() {
         println!("Processing request: {}", input);
     }
