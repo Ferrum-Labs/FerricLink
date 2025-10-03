@@ -2,7 +2,6 @@ import type { Config } from '@docusaurus/types';
 import { themes as prismThemes } from 'prism-react-renderer';
 
 const config: Config = {
-  // ——— Site basics ———
   title: 'FerricLink',
   tagline: 'Rust-first building blocks inspired by LangChain & LangGraph',
   url: 'https://ferrum-labs.github.io',
@@ -12,27 +11,24 @@ const config: Config = {
   projectName: 'FerricLink',
   trailingSlash: false,
 
-  // keep throwing for broken links; handled by core (not deprecated)
+  // keep strict link checking
   onBrokenLinks: 'throw',
 
-  // move deprecated onBrokenMarkdownLinks here:
+  // deprecation fix: move markdown hook here
   markdown: {
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
   },
 
-  onBrokenMarkdownLinks: undefined as unknown as never, // ensure old prop is not used
-
   i18n: { defaultLocale: 'en', locales: ['en'] },
 
-  // ——— Content presets ———
   presets: [
     [
       'classic',
       {
         docs: {
-          path: 'docs',               // docs/docs/
+          path: 'docs',
           routeBasePath: 'docs',
           sidebarPath: require.resolve('./sidebars.ts'),
           editUrl: 'https://github.com/Ferrum-Labs/FerricLink/edit/main/docs/',
@@ -49,15 +45,8 @@ const config: Config = {
     ],
   ],
 
-  // ——— Plugins / redirects ———
-  plugins: [
-    [
-      '@docusaurus/plugin-client-redirects',
-      { redirects: [{ from: '/', to: '/docs' }] },
-    ],
-  ],
+  // no redirects plugin needed
 
-  // ——— Theme / UI ———
   themeConfig: {
     image: 'img/og.png',
     metadata: [{ name: 'theme-color', content: '#0f172a' }],
@@ -89,11 +78,11 @@ const config: Config = {
       style: 'dark',
       links: [
         { title: 'Docs', items: [{ label: 'Getting Started', to: '/docs' }] },
-        { title: 'Community', items: [{ label: 'GitHub', href: 'https://github.com/Ferrum-Labs/FerricLink' }] },
+        { title: 'Community', items: [{ label: 'GitHub', href: 'https://github.com/Ferrum-Labs/FerricLink' }] }
       ],
-      copyright: `© ${new Date().getFullYear()} Ferrum Labs`,
-    },
-  },
+      copyright: `© ${new Date().getFullYear()} Ferrum Labs`
+    }
+  }
 };
 
 export default config;
