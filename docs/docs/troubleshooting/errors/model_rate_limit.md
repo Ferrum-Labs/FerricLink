@@ -58,7 +58,7 @@ use std::sync::Arc;
 use tokio::sync::Semaphore;
 
 struct RateLimiter {
-    semaphore: Arc<Semaphore>,
+    semaphore: Arc&lt;Semaphore&gt;,
     max_requests_per_minute: usize,
 }
 
@@ -86,7 +86,7 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 struct UsageMonitor {
-    requests: HashMap<String, Vec<Instant>>,
+    requests: HashMap&lt;String, Vec&lt;Instant&gt;&gt;,
     window: Duration,
 }
 

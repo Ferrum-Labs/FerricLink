@@ -15,7 +15,7 @@ FerricLink uses structured error types that provide detailed information about w
 ```rust
 use ferriclink_core::{FerricLinkError, Result};
 
-fn process_data(data: &str) -> Result<String> {
+fn process_data(data: &str) -> Result&lt;String&gt; {
     if data.is_empty() {
         return Err(FerricLinkError::validation("Data cannot be empty"));
     }
@@ -140,8 +140,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 struct CircuitBreaker {
-    is_open: Arc<AtomicBool>,
-    last_failure: Arc<Mutex<Option<Instant>>>,
+    is_open: Arc&lt;AtomicBool&gt;,
+    last_failure: Arc&lt;Mutex&lt;Option&lt;Instant&gt;&gt;&gt;,
     timeout: Duration,
 }
 

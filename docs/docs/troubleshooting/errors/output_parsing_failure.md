@@ -45,7 +45,7 @@ use serde::{Deserialize, Serialize};
 struct ModelResponse {
     answer: String,
     confidence: f64,
-    reasoning: Option<String>,
+    reasoning: Option&lt;String&gt;,
 }
 
 fn parse_structured_output(output: &str) -> Result<ModelResponse, FerricLinkError> {
@@ -102,7 +102,7 @@ async fn handle_parsing_error(error: FerricLinkError) -> Result<String, FerricLi
 ```rust
 fn robust_parse(output: &str) -> Result<Value, FerricLinkError> {
     // Try direct parsing first
-    if let Ok(parsed) = serde_json::from_str::<Value>(output) {
+    if let Ok(parsed) = serde_json::from_str::&lt;Value&gt;(output) {
         return Ok(parsed);
     }
     
