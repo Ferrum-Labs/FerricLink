@@ -1,12 +1,247 @@
+/* Ferrum Labs Color Scheme */
 :root {
-    --ifm-color-primary: #4f46e5;
+    /* Ferrum Labs Brand Colors */
+    --iron: #b7410e;
+    --iron-600: #9e380c;
+    --graphite: #30363d;
+    --gold: #d4af37;
+    
+    /* Light Theme */
+    --bg: #f5f5f5;
+    --fg: #1b1d1f;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    
+    /* Docusaurus Overrides */
+    --ifm-color-primary: var(--iron);
+    --ifm-color-primary-dark: var(--iron-600);
+    --ifm-color-primary-darker: #8b2e0a;
+    --ifm-color-primary-darkest: #6d2408;
+    --ifm-color-primary-light: #c94a12;
+    --ifm-color-primary-lighter: #d15a22;
+    --ifm-color-primary-lightest: #e66d32;
+    
+    --ifm-background-color: var(--bg);
+    --ifm-background-surface-color: var(--card);
+    --ifm-color-content: var(--fg);
+    --ifm-color-content-secondary: var(--muted);
+    
+    --ifm-navbar-background-color: var(--card);
+    --ifm-navbar-shadow: var(--shadow);
+    
+    --ifm-footer-background-color: var(--graphite);
+    --ifm-footer-color: var(--muted);
+    
     --ifm-code-font-size: 95%;
-    --ifm-font-family-base: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    --ifm-font-family-base: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --ifm-font-family-monospace: "JetBrains Mono", "Fira Code", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
+    
+    --ifm-h1-font-size: 2.5rem;
+    --ifm-h2-font-size: 2rem;
+    --ifm-h3-font-size: 1.5rem;
+    --ifm-h4-font-size: 1.25rem;
+    --ifm-h5-font-size: 1.125rem;
+    --ifm-h6-font-size: 1rem;
+    
+    --ifm-link-color: var(--iron);
+    --ifm-link-hover-color: var(--iron-600);
+    
+    --ifm-button-border-radius: 10px;
+    --ifm-card-border-radius: 16px;
+    --ifm-alert-border-radius: 16px;
+    --ifm-navbar-border-radius: 16px;
+    --ifm-footer-border-radius: 16px;
+    
+    --ifm-button-padding-horizontal: 1rem;
+    --ifm-button-padding-vertical: 0.6rem;
+    --ifm-button-font-weight: 600;
+    
+    --ifm-card-shadow: var(--shadow);
+    --ifm-alert-shadow: var(--shadow);
   }
-  html[data-theme='dark'] {
-    --ifm-background-color: #0b1020;
-    --ifm-navbar-background-color: #0b1020;
-  }
-  .navbar__logo img { height: 28px; }
-  .card, .alert, .navbar, .footer { border-radius: 16px; }
   
+  /* Dark Theme */
+  html[data-theme='dark'] {
+    --bg: #181a1b;
+    --fg: #ecedee;
+    --card: #202325;
+    --muted: #9aa3ad;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    
+    --ifm-background-color: var(--bg);
+    --ifm-background-surface-color: var(--card);
+    --ifm-color-content: var(--fg);
+    --ifm-color-content-secondary: var(--muted);
+    
+    --ifm-navbar-background-color: var(--card);
+    --ifm-footer-background-color: var(--graphite);
+    
+    --ifm-link-color: var(--iron);
+    --ifm-link-hover-color: var(--iron-600);
+  }
+  
+  /* Custom Components */
+  .navbar__logo img { 
+    height: 28px; 
+  }
+  
+  .card, .alert, .navbar, .footer { 
+    border-radius: 16px; 
+  }
+  
+  /* Enhanced Button Styles */
+  .button--primary {
+    background: var(--iron);
+    border-color: var(--iron);
+    color: white;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .button--primary:hover {
+    background: var(--iron-600);
+    border-color: var(--iron-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(183, 65, 14, 0.3);
+  }
+  
+  .button--secondary {
+    border-color: var(--iron);
+    color: var(--iron);
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .button--secondary:hover {
+    background: var(--iron);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(183, 65, 14, 0.2);
+  }
+  
+  /* Enhanced Card Styles */
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(183, 65, 14, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: rgba(183, 65, 14, 0.2);
+  }
+  
+  /* Code Block Enhancements */
+  .prism-code {
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  
+  /* Table Styles */
+  table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  
+  table th {
+    background: var(--iron);
+    color: white;
+    font-weight: 600;
+  }
+  
+  /* Alert Styles */
+  .alert {
+    border-left: 4px solid var(--iron);
+    box-shadow: var(--shadow);
+  }
+  
+  .alert--info {
+    --ifm-alert-background-color: rgba(183, 65, 14, 0.1);
+    --ifm-alert-border-color: var(--iron);
+  }
+  
+  .alert--success {
+    --ifm-alert-background-color: rgba(212, 175, 55, 0.1);
+    --ifm-alert-border-color: var(--gold);
+  }
+  
+  .alert--warning {
+    --ifm-alert-background-color: rgba(183, 65, 14, 0.15);
+    --ifm-alert-border-color: var(--iron-600);
+  }
+  
+  .alert--danger {
+    --ifm-alert-background-color: rgba(183, 65, 14, 0.2);
+    --ifm-alert-border-color: var(--iron-600);
+  }
+  
+  /* Navigation Enhancements */
+  .navbar__item {
+    font-weight: 500;
+  }
+  
+  .navbar__link--active {
+    color: var(--iron);
+    font-weight: 600;
+  }
+  
+  /* Footer Enhancements */
+  .footer {
+    background: var(--graphite);
+    color: var(--muted);
+  }
+  
+  .footer__link-item {
+    color: var(--muted);
+    transition: color 0.2s ease;
+  }
+  
+  .footer__link-item:hover {
+    color: var(--iron);
+  }
+  
+  /* Typography Enhancements */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--fg);
+    font-weight: 600;
+  }
+  
+  h1 {
+    color: var(--iron);
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 996px) {
+    .navbar__logo img {
+      height: 24px;
+    }
+    
+    .card {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  /* Custom Utility Classes */
+  .text-iron {
+    color: var(--iron);
+  }
+  
+  .text-gold {
+    color: var(--gold);
+  }
+  
+  .text-muted {
+    color: var(--muted);
+  }
+  
+  .bg-card {
+    background: var(--card);
+  }
+  
+  .shadow-custom {
+    box-shadow: var(--shadow);
+  }
+    

@@ -51,7 +51,7 @@ const config: Config = {
 
   themeConfig: {
     image: 'img/og.png',
-    metadata: [{ name: 'theme-color', content: '#0f172a' }],
+    metadata: [{ name: 'theme-color', content: '#b7410e' }],
 
     navbar: {
       title: 'FerricLink',
@@ -85,7 +85,7 @@ const config: Config = {
         { title: 'Docs', items: [{ label: 'Getting Started', to: '/docs' }] },
         { title: 'Community', items: [{ label: 'GitHub', href: 'https://github.com/Ferrum-Labs/FerricLink' }] }
       ],
-      copyright: `© ${new Date().getFullYear()} Ferrum Labs`
+      copyright: `© ${new Date().getFullYear()} Ferrum Labs. Built with Rusty love.`
     }
   }
 };
