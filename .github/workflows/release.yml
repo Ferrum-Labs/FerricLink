@@ -2,79 +2,59 @@ name: Release
 
 on:
   push:
-    branches: [ main ]   # release-please opens PRs into main; merge to cut a release
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   release_please:
-    name: release-please (Rust workspace)
+    name: release-please
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
+      releases_created: ${{ steps.rp.outputs.releases_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
     steps:
-      - uses: google-github-actions/release-please-action@v4
-        id: release
+      - uses: actions/checkout@v4
+
+      # Use the maintained action + config/manifest files
+      - id: rp
+        uses: googleapis/release-please-action@v4
         with:
-          release-type: rust
-          package-name: ferriclink
-          monorepo-tags: true
-          bump-minor-pre-major: true
-          changelog-types: |
-            [
-              {"type":"feat","section":"Features","hidden":false},
-              {"type":"fix","section":"Bug Fixes","hidden":false},
-              {"type":"perf","section":"Performance","hidden":false},
-              {"type":"refactor","section":"Refactors","hidden":false},
-              {"type":"docs","section":"Docs","hidden":false},
-              {"type":"chore","section":"Chores","hidden":false}
-            ]
+          # We keep simple 'vX.Y.Z' tags (no component prefix)
+          include-component-in-tag: false
+          target-branch: main
+          # Point at our repo config
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   publish:
     name: publish to crates.io
     needs: release_please
-    if: needs.release_please.outputs.release_created == 'true'
+    if: needs.release_please.outputs.releases_created == 'true'
     runs-on: ubuntu-latest
     environment: crates-io
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - name: Set up cargo token
+      - name: Configure crates.io token
         run: |
           mkdir -p $HOME/.cargo
-          cat > $HOME/.cargo/credentials <<EOF
+          cat > $HOME/.cargo/credentials <<'EOF'
           [registry]
           token = "${{ secrets.CARGO_REGISTRY_TOKEN }}"
           EOF
           chmod 0600 $HOME/.cargo/credentials
 
-      # when we add more crates later, publish in topological order.
-      - name: Dry-run publish
-        run: |
-          cargo publish -p ferriclink-core --dry-run --allow-dirty
+      - name: Dry run
+        run: cargo publish -p ferriclink-core --dry-run --allow-dirty
 
       - name: Publish
-        run: |
-          cargo publish -p ferriclink-core --no-verify
-
-  announce:
-    name: tag + changelog summary
-    needs: [release_please, publish]
-    if: needs.release_please.outputs.release_created == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "Published ${{ needs.release_please.outputs.tag_name }} to crates.io 🎉"
+        run: cargo publish -p ferriclink-core --no-verify
