@@ -3,6 +3,8 @@ name: Website
 on:
   push:
     branches: [ main ]
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -19,32 +21,121 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # we need tags for the versions list
 
-      # ---- Rust docs at repo root ----
-      - uses: dtolnay/rust-toolchain@stable
+      # ---- Build Rust API docs (nightly + docsrs) ----
+      - uses: dtolnay/rust-toolchain@nightly
       - uses: Swatinem/rust-cache@v2
-      - name: Build rustdoc
+
+      - name: Build rustdoc (nightly, docsrs)
         env:
           RUSTDOCFLAGS: --cfg docsrs
           RUSTFLAGS: --cfg docsrs
         run: |
-          cargo doc --workspace --all-features --no-deps
-          mkdir -p docs/static/api/latest
-          rm -rf docs/static/api/latest/*
-          cp -a target/doc/* docs/static/api/latest/
-          # ensure index.html exists for /api/latest/
-          if [ ! -f docs/static/api/latest/index.html ]; then
-            root=$(ls -1 docs/static/api/latest | head -n1)
-            echo '<meta http-equiv="refresh" content="0; url='"$root"'/">' > docs/static/api/latest/index.html
+          cargo +nightly doc --workspace --all-features --no-deps
+
+      - name: Stage API docs (versioned + latest)
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          API_ROOT="docs/static/api"
+          mkdir -p "${API_ROOT}"
+
+          REF_TYPE="${GITHUB_REF_TYPE}"        # "branch" or "tag"
+          REF_NAME="${GITHUB_REF_NAME}"        # e.g., "main" or "v0.3.1"
+
+          TMP_API="$(mktemp -d)"
+          cp -a target/doc/* "${TMP_API}/"
+
+          ensure_index () {
+            local dest="$1"
+            if [ ! -f "${dest}/index.html" ]; then
+              local root
+              root="$(ls -1 "${dest}" | head -n1)"
+              printf '<!doctype html><meta http-equiv="refresh" content="0; url=%s/">' "${root}" > "${dest}/index.html"
+            fi
+          }
+
+          if [ "${REF_TYPE}" = "tag" ] && [[ "${REF_NAME}" == v* ]]; then
+            TAG_DIR="${API_ROOT}/${REF_NAME}"
+            rm -rf "${TAG_DIR}"
+            mkdir -p "${TAG_DIR}"
+            cp -a "${TMP_API}/." "${TAG_DIR}/"
+            ensure_index "${TAG_DIR}"
+
+            LATEST_DIR="${API_ROOT}/latest"
+            rm -rf "${LATEST_DIR}"
+            mkdir -p "${LATEST_DIR}"
+            cp -a "${TMP_API}/." "${LATEST_DIR}/"
+            ensure_index "${LATEST_DIR}"
+          else
+            LATEST_DIR="${API_ROOT}/latest"
+            rm -rf "${LATEST_DIR}"
+            mkdir -p "${LATEST_DIR}"
+            cp -a "${TMP_API}/." "${LATEST_DIR}/"
+            ensure_index "${LATEST_DIR}"
           fi
 
-      # ---- Node/Docusaurus inside docs/ ----
+          mapfile -t TAGS < <(git tag -l 'v*' --sort=-v:refname)
+          {
+            printf '['
+            first=1
+            for t in "${TAGS[@]}"; do
+              if [ $first -eq 1 ]; then first=0; else printf ','; fi
+              printf '"%s"' "$t"
+            done
+            printf ']'
+          } > "${API_ROOT}/versions.json"
+
+          {
+            cat <<'HTML'
+<!doctype html><html lang="en"><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FerricLink API Versions</title>
+<style>
+  body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;}
+  .wrap{max-width:720px;margin:40px auto;padding:0 16px}
+  a{color:#4f46e5;text-decoration:none}
+  ul{line-height:1.9}
+  .muted{color:#666}
+</style>
+<div class="wrap">
+  <h1>FerricLink – API Docs</h1>
+  <p><a href="./latest/">Latest</a> <span class="muted">/api/latest/</span></p>
+  <h2>Versions</h2>
+  <ul id="versions"></ul>
+  <script>
+    fetch('./versions.json').then(r=>r.json()).then(vs=>{
+      const ul = document.getElementById('versions');
+      if (!Array.isArray(vs) || vs.length===0) {
+        ul.innerHTML = '<li class="muted">No tagged versions yet.</li>';
+        return;
+      }
+      vs.forEach(v=>{
+        const li=document.createElement('li');
+        const a=document.createElement('a');
+        a.href = './'+v+'/';
+        a.textContent = v;
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+    }).catch(()=> {
+      document.getElementById('versions').innerHTML='<li class="muted">Unable to load versions.</li>';
+    });
+  </script>
+</div>
+HTML
+          } > "${API_ROOT}/index.html"
+
+      # ---- Build Docusaurus site in docs/ ----
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: docs/package.json
+          cache-dependency-path: docs/package-lock.json
 
       - name: Install deps
         working-directory: docs
@@ -54,7 +145,7 @@ jobs:
         working-directory: docs
         run: npm run build
 
-      # ---- GitHub Pages ----
+      # ---- Deploy to GitHub Pages ----
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
