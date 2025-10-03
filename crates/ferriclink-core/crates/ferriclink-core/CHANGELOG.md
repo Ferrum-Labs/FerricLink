@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.0](https://github.com/Ferrum-Labs/FerricLink/compare/ferriclink-core-v0.1.3...ferriclink-core-v0.2.0) (2025-10-03)
+## [0.1.4](https://github.com/Ferrum-Labs/FerricLink/compare/ferriclink-core-v0.1.3...ferriclink-core-v0.1.4) (2025-10-03)
 
 
 ### Features
