@@ -16,7 +16,7 @@ use std::collections::HashMap;
 
 use crate::errors::Result;
 use crate::impl_serializable;
-use crate::vectorstores::{VectorStore, VectorSearchResult};
+use crate::vectorstores::{VectorSearchResult, VectorStore};
 
 /// A type alias for example data
 pub type Example = HashMap<String, String>;
@@ -188,7 +188,8 @@ impl BaseExampleSelector for LengthBasedExampleSelector {
     fn add_example(&mut self, example: Example) -> Result<()> {
         self.examples.push(example.clone());
         let text = self.example_to_text(&example);
-        self.example_text_lengths.push((self.get_text_length)(&text));
+        self.example_text_lengths
+            .push((self.get_text_length)(&text));
         Ok(())
     }
 
@@ -214,7 +215,10 @@ impl BaseExampleSelector for LengthBasedExampleSelector {
     }
 }
 
-impl_serializable!(LengthBasedExampleSelector, ["ferriclink", "example_selectors", "length_based"]);
+impl_serializable!(
+    LengthBasedExampleSelector,
+    ["ferriclink", "example_selectors", "length_based"]
+);
 
 /// Select examples based on semantic similarity using vector stores.
 ///
@@ -279,30 +283,27 @@ impl SemanticSimilarityExampleSelector {
     /// Convert search results to examples.
     fn search_results_to_examples(&self, results: Vec<VectorSearchResult>) -> Vec<Example> {
         let mut examples = Vec::new();
-        
+
         for result in results {
             let mut example = HashMap::new();
-            
+
             // Convert metadata to example format
             for (key, value) in result.metadata {
                 if let Some(str_value) = value.as_str() {
                     example.insert(key, str_value.to_string());
                 }
             }
-            
+
             // Filter by example keys if specified
             if let Some(ref example_keys) = self.example_keys {
-                example = example
-                    .into_iter()
-                    .filter(|(k, _)| example_keys.contains(k))
-                    .collect();
+                example.retain(|k, _| example_keys.contains(k));
             }
-            
+
             if !example.is_empty() {
                 examples.push(example);
             }
         }
-        
+
         examples
     }
 }
@@ -314,7 +315,7 @@ impl BaseExampleSelector for SemanticSimilarityExampleSelector {
         // This is a limitation of the current design
         // In practice, you'd want to use the async version
         Err(crate::errors::FerricLinkError::generic(
-            "Sync add_example not supported for SemanticSimilarityExampleSelector. Use aadd_example instead."
+            "Sync add_example not supported for SemanticSimilarityExampleSelector. Use aadd_example instead.",
         ))
     }
 
@@ -325,12 +326,12 @@ impl BaseExampleSelector for SemanticSimilarityExampleSelector {
             .into_iter()
             .map(|(k, v)| (k, serde_json::Value::String(v)))
             .collect();
-        
+
         // Add to vector store
         self.vectorstore
             .add_texts(vec![text], Some(vec![metadata]), None)
             .await?;
-        
+
         Ok(())
     }
 
@@ -339,22 +340,19 @@ impl BaseExampleSelector for SemanticSimilarityExampleSelector {
         // This is a limitation of the current design
         // In practice, you'd want to use the async version
         Err(crate::errors::FerricLinkError::generic(
-            "Sync select_examples not supported for SemanticSimilarityExampleSelector. Use aselect_examples instead."
+            "Sync select_examples not supported for SemanticSimilarityExampleSelector. Use aselect_examples instead.",
         ))
     }
 
     async fn aselect_examples(&self, input_variables: &Example) -> Result<Vec<Example>> {
         let query_text = self.example_to_text(input_variables, self.input_keys.as_deref());
-        
+
         // Perform async similarity search
-        let results = self.vectorstore
-            .similarity_search(
-                &query_text,
-                self.k,
-                self.vectorstore_kwargs.clone(),
-            )
+        let results = self
+            .vectorstore
+            .similarity_search(&query_text, self.k, self.vectorstore_kwargs.clone())
             .await?;
-        
+
         Ok(self.search_results_to_examples(results))
     }
 }
@@ -430,30 +428,27 @@ impl MaxMarginalRelevanceExampleSelector {
     /// Convert search results to examples.
     fn search_results_to_examples(&self, results: Vec<VectorSearchResult>) -> Vec<Example> {
         let mut examples = Vec::new();
-        
+
         for result in results {
             let mut example = HashMap::new();
-            
+
             // Convert metadata to example format
             for (key, value) in result.metadata {
                 if let Some(str_value) = value.as_str() {
                     example.insert(key, str_value.to_string());
                 }
             }
-            
+
             // Filter by example keys if specified
             if let Some(ref example_keys) = self.example_keys {
-                example = example
-                    .into_iter()
-                    .filter(|(k, _)| example_keys.contains(k))
-                    .collect();
+                example.retain(|k, _| example_keys.contains(k));
             }
-            
+
             if !example.is_empty() {
                 examples.push(example);
             }
         }
-        
+
         examples
     }
 }
@@ -463,7 +458,7 @@ impl BaseExampleSelector for MaxMarginalRelevanceExampleSelector {
     fn add_example(&mut self, _example: Example) -> Result<()> {
         // For sync version, we can't easily handle async operations
         Err(crate::errors::FerricLinkError::generic(
-            "Sync add_example not supported for MaxMarginalRelevanceExampleSelector. Use aadd_example instead."
+            "Sync add_example not supported for MaxMarginalRelevanceExampleSelector. Use aadd_example instead.",
         ))
     }
 
@@ -474,35 +469,32 @@ impl BaseExampleSelector for MaxMarginalRelevanceExampleSelector {
             .into_iter()
             .map(|(k, v)| (k, serde_json::Value::String(v)))
             .collect();
-        
+
         // Add to vector store
         self.vectorstore
             .add_texts(vec![text], Some(vec![metadata]), None)
             .await?;
-        
+
         Ok(())
     }
 
     fn select_examples(&self, _input_variables: &Example) -> Result<Vec<Example>> {
         // For sync version, we can't easily handle async operations
         Err(crate::errors::FerricLinkError::generic(
-            "Sync select_examples not supported for MaxMarginalRelevanceExampleSelector. Use aselect_examples instead."
+            "Sync select_examples not supported for MaxMarginalRelevanceExampleSelector. Use aselect_examples instead.",
         ))
     }
 
     async fn aselect_examples(&self, input_variables: &Example) -> Result<Vec<Example>> {
         let query_text = self.example_to_text(input_variables, self.input_keys.as_deref());
-        
+
         // For now, fall back to regular similarity search since MMR is not implemented
         // TODO: Implement proper MMR algorithm when vector store supports it
-        let results = self.vectorstore
-            .similarity_search(
-                &query_text,
-                self.k,
-                self.vectorstore_kwargs.clone(),
-            )
+        let results = self
+            .vectorstore
+            .similarity_search(&query_text, self.k, self.vectorstore_kwargs.clone())
             .await?;
-        
+
         Ok(self.search_results_to_examples(results))
     }
 }
@@ -520,7 +512,10 @@ impl BaseExampleSelector for MaxMarginalRelevanceExampleSelector {
 pub fn sorted_values(values: &Example) -> Vec<String> {
     let mut sorted_pairs: Vec<_> = values.iter().collect();
     sorted_pairs.sort_by_key(|(key, _)| *key);
-    sorted_pairs.into_iter().map(|(_, value)| value.clone()).collect()
+    sorted_pairs
+        .into_iter()
+        .map(|(_, value)| value.clone())
+        .collect()
 }
 
 #[cfg(test)]
@@ -533,10 +528,13 @@ mod tests {
                 .iter()
                 .cloned()
                 .collect(),
-            [("input".to_string(), "How does machine learning work?".to_string())]
-                .iter()
-                .cloned()
-                .collect(),
+            [(
+                "input".to_string(),
+                "How does machine learning work?".to_string(),
+            )]
+            .iter()
+            .cloned()
+            .collect(),
             [("input".to_string(), "Explain neural networks".to_string())]
                 .iter()
                 .cloned()
@@ -548,12 +546,12 @@ mod tests {
     fn test_length_based_selector_basic() {
         let examples = create_test_examples();
         let selector = LengthBasedExampleSelector::with_word_count(examples, 10);
-        
+
         let input = [("input".to_string(), "Tell me about AI".to_string())]
             .iter()
             .cloned()
             .collect();
-        
+
         let selected = selector.select_examples(&input).unwrap();
         assert!(!selected.is_empty());
         assert!(selected.len() <= 3);
@@ -563,12 +561,12 @@ mod tests {
     fn test_length_based_selector_add_example() {
         let examples = create_test_examples();
         let mut selector = LengthBasedExampleSelector::with_word_count(examples, 20);
-        
+
         let new_example = [("input".to_string(), "What is deep learning?".to_string())]
             .iter()
             .cloned()
             .collect();
-        
+
         selector.add_example(new_example).unwrap();
         assert_eq!(selector.len(), 4);
     }
@@ -577,12 +575,12 @@ mod tests {
     fn test_length_based_selector_max_length() {
         let examples = create_test_examples();
         let selector = LengthBasedExampleSelector::with_word_count(examples, 5);
-        
+
         let input = [("input".to_string(), "AI question".to_string())]
             .iter()
             .cloned()
             .collect();
-        
+
         let selected = selector.select_examples(&input).unwrap();
         // Should select fewer examples due to length constraint
         assert!(selected.len() <= 3);
@@ -594,7 +592,7 @@ mod tests {
         example.insert("z".to_string(), "last".to_string());
         example.insert("a".to_string(), "first".to_string());
         example.insert("m".to_string(), "middle".to_string());
-        
+
         let sorted = sorted_values(&example);
         assert_eq!(sorted, vec!["first", "middle", "last"]);
     }
@@ -603,12 +601,12 @@ mod tests {
     fn test_length_based_selector_empty() {
         let selector = LengthBasedExampleSelector::with_word_count(vec![], 10);
         assert!(selector.is_empty());
-        
+
         let input = [("input".to_string(), "test".to_string())]
             .iter()
             .cloned()
             .collect();
-        
+
         let selected = selector.select_examples(&input).unwrap();
         assert!(selected.is_empty());
     }
@@ -617,12 +615,12 @@ mod tests {
     async fn test_length_based_selector_async() {
         let examples = create_test_examples();
         let selector = LengthBasedExampleSelector::with_word_count(examples, 15);
-        
+
         let input = [("input".to_string(), "AI question".to_string())]
             .iter()
             .cloned()
             .collect();
-        
+
         let selected = selector.aselect_examples(&input).await.unwrap();
         assert!(!selected.is_empty());
     }

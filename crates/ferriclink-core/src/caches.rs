@@ -129,7 +129,12 @@ pub trait BaseCache: Send + Sync {
     ///   representation.
     /// * `return_val` - The value to be cached. The value is a list of Generations
     ///   (or subclasses).
-    async fn aupdate(&self, prompt: &str, llm_string: &str, return_val: CachedGenerations) -> Result<()>;
+    async fn aupdate(
+        &self,
+        prompt: &str,
+        llm_string: &str,
+        return_val: CachedGenerations,
+    ) -> Result<()>;
 
     /// Async clear cache that can take additional keyword arguments.
     async fn aclear(&self) -> Result<()>;
@@ -229,7 +234,7 @@ impl InMemoryCache {
     fn generate_key(prompt: &str, llm_string: &str) -> String {
         // Use a simple concatenation with a delimiter
         // In production, you might want to use a hash function
-        format!("{}|||{}", prompt, llm_string)
+        format!("{prompt}|||{llm_string}")
     }
 
     /// Get cache statistics.
@@ -258,7 +263,6 @@ impl InMemoryCache {
     pub fn max_size(&self) -> Option<usize> {
         self.max_size
     }
-
 }
 
 impl Default for InMemoryCache {
@@ -271,10 +275,12 @@ impl Default for InMemoryCache {
 impl BaseCache for InMemoryCache {
     fn lookup(&self, prompt: &str, llm_string: &str) -> Result<Option<CachedGenerations>> {
         let key = Self::generate_key(prompt, llm_string);
-        let mut cache = self.cache.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Cache lock error: {}", e)))?;
-        let mut stats = self.stats.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Stats lock error: {}", e)))?;
+        let mut cache = self.cache.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Cache lock error: {e}"))
+        })?;
+        let mut stats = self.stats.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Stats lock error: {e}"))
+        })?;
 
         if let Some(entry) = cache.get_mut(&key) {
             // Update access information
@@ -290,10 +296,12 @@ impl BaseCache for InMemoryCache {
 
     fn update(&self, prompt: &str, llm_string: &str, return_val: CachedGenerations) -> Result<()> {
         let key = Self::generate_key(prompt, llm_string);
-        let mut cache = self.cache.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Cache lock error: {}", e)))?;
-        let mut stats = self.stats.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Stats lock error: {}", e)))?;
+        let mut cache = self.cache.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Cache lock error: {e}"))
+        })?;
+        let mut stats = self.stats.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Stats lock error: {e}"))
+        })?;
 
         // Evict if needed before adding new entry
         if let Some(max_size) = self.max_size {
@@ -330,10 +338,12 @@ impl BaseCache for InMemoryCache {
     }
 
     fn clear(&self) -> Result<()> {
-        let mut cache = self.cache.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Cache lock error: {}", e)))?;
-        let mut stats = self.stats.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Stats lock error: {}", e)))?;
+        let mut cache = self.cache.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Cache lock error: {e}"))
+        })?;
+        let mut stats = self.stats.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Stats lock error: {e}"))
+        })?;
 
         cache.clear();
         stats.clears += 1;
@@ -357,7 +367,12 @@ impl BaseCache for InMemoryCache {
         }
     }
 
-    async fn aupdate(&self, prompt: &str, llm_string: &str, return_val: CachedGenerations) -> Result<()> {
+    async fn aupdate(
+        &self,
+        prompt: &str,
+        llm_string: &str,
+        return_val: CachedGenerations,
+    ) -> Result<()> {
         let key = Self::generate_key(prompt, llm_string);
         let mut cache = self.cache.write().await;
         let mut stats = self.stats.write().await;
@@ -452,10 +467,12 @@ impl BaseCache for TtlCache {
     fn lookup(&self, prompt: &str, llm_string: &str) -> Result<Option<CachedGenerations>> {
         // For TTL cache, we need to check expiration
         let key = InMemoryCache::generate_key(prompt, llm_string);
-        let mut cache = self.inner.cache.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Cache lock error: {}", e)))?;
-        let mut stats = self.inner.stats.try_write()
-            .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Stats lock error: {}", e)))?;
+        let mut cache = self.inner.cache.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Cache lock error: {e}"))
+        })?;
+        let mut stats = self.inner.stats.try_write().map_err(|e| {
+            crate::errors::FerricLinkError::runtime(format!("Stats lock error: {e}"))
+        })?;
 
         if let Some(entry) = cache.get(&key) {
             if Self::is_expired(entry, self.default_ttl) {
@@ -515,7 +532,12 @@ impl BaseCache for TtlCache {
         }
     }
 
-    async fn aupdate(&self, prompt: &str, llm_string: &str, return_val: CachedGenerations) -> Result<()> {
+    async fn aupdate(
+        &self,
+        prompt: &str,
+        llm_string: &str,
+        return_val: CachedGenerations,
+    ) -> Result<()> {
         self.inner.aupdate(prompt, llm_string, return_val).await
     }
 
@@ -539,14 +561,14 @@ mod tests {
     #[test]
     fn test_in_memory_cache_basic() {
         let cache = InMemoryCache::new();
-        
+
         // Test empty cache
         assert!(cache.lookup("test", "llm").unwrap().is_none());
-        
+
         // Test update and lookup
         let generations = vec![create_test_generation("Hello, world!")];
         cache.update("test", "llm", generations.clone()).unwrap();
-        
+
         let result = cache.lookup("test", "llm").unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap(), generations);
@@ -555,14 +577,20 @@ mod tests {
     #[test]
     fn test_in_memory_cache_with_max_size() {
         let cache = InMemoryCache::with_max_size(Some(2));
-        
+
         // Add entries up to max size
-        cache.update("test1", "llm", vec![create_test_generation("1")]).unwrap();
-        cache.update("test2", "llm", vec![create_test_generation("2")]).unwrap();
-        
+        cache
+            .update("test1", "llm", vec![create_test_generation("1")])
+            .unwrap();
+        cache
+            .update("test2", "llm", vec![create_test_generation("2")])
+            .unwrap();
+
         // This should evict the first entry
-        cache.update("test3", "llm", vec![create_test_generation("3")]).unwrap();
-        
+        cache
+            .update("test3", "llm", vec![create_test_generation("3")])
+            .unwrap();
+
         assert!(cache.lookup("test1", "llm").unwrap().is_none());
         assert!(cache.lookup("test2", "llm").unwrap().is_some());
         assert!(cache.lookup("test3", "llm").unwrap().is_some());
@@ -571,10 +599,12 @@ mod tests {
     #[test]
     fn test_in_memory_cache_clear() {
         let cache = InMemoryCache::new();
-        
-        cache.update("test", "llm", vec![create_test_generation("Hello")]).unwrap();
+
+        cache
+            .update("test", "llm", vec![create_test_generation("Hello")])
+            .unwrap();
         assert!(cache.lookup("test", "llm").unwrap().is_some());
-        
+
         cache.clear().unwrap();
         assert!(cache.lookup("test", "llm").unwrap().is_none());
     }
@@ -582,11 +612,14 @@ mod tests {
     #[tokio::test]
     async fn test_in_memory_cache_async() {
         let cache = InMemoryCache::new();
-        
+
         // Test async operations
         let generations = vec![create_test_generation("Async test")];
-        cache.aupdate("test", "llm", generations.clone()).await.unwrap();
-        
+        cache
+            .aupdate("test", "llm", generations.clone())
+            .await
+            .unwrap();
+
         let result = cache.alookup("test", "llm").await.unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap(), generations);
@@ -595,23 +628,26 @@ mod tests {
     #[tokio::test]
     async fn test_cache_stats() {
         let cache = InMemoryCache::new();
-        
+
         // Initial stats
         let stats = cache.stats().await;
         assert_eq!(stats.hits, 0);
         assert_eq!(stats.misses, 0);
         assert_eq!(stats.updates, 0);
-        
+
         // Test miss
         cache.alookup("test", "llm").await.unwrap();
         let stats = cache.stats().await;
         assert_eq!(stats.misses, 1);
-        
+
         // Test update
-        cache.aupdate("test", "llm", vec![create_test_generation("Hello")]).await.unwrap();
+        cache
+            .aupdate("test", "llm", vec![create_test_generation("Hello")])
+            .await
+            .unwrap();
         let stats = cache.stats().await;
         assert_eq!(stats.updates, 1);
-        
+
         // Test hit
         cache.alookup("test", "llm").await.unwrap();
         let stats = cache.stats().await;
@@ -622,11 +658,13 @@ mod tests {
     #[test]
     fn test_ttl_cache() {
         let cache = TtlCache::new(Duration::from_millis(100), None);
-        
+
         // Add entry
-        cache.update("test", "llm", vec![create_test_generation("TTL test")]).unwrap();
+        cache
+            .update("test", "llm", vec![create_test_generation("TTL test")])
+            .unwrap();
         assert!(cache.lookup("test", "llm").unwrap().is_some());
-        
+
         // Wait for expiration
         std::thread::sleep(Duration::from_millis(150));
         assert!(cache.lookup("test", "llm").unwrap().is_none());
@@ -638,7 +676,7 @@ mod tests {
         let key2 = InMemoryCache::generate_key("prompt2", "llm1");
         let key3 = InMemoryCache::generate_key("prompt1", "llm2");
         let key4 = InMemoryCache::generate_key("prompt1", "llm1");
-        
+
         assert_ne!(key1, key2);
         assert_ne!(key1, key3);
         assert_eq!(key1, key4);

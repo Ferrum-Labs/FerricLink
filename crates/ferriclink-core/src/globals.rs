@@ -3,8 +3,8 @@
 //! This module provides global settings similar to LangChain's globals.py,
 //! but with Rust's type safety and thread safety guarantees.
 
-use std::sync::{Arc, RwLock};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, RwLock};
 
 use crate::caches::BaseCache;
 use crate::errors::Result;
@@ -50,21 +50,27 @@ impl GlobalConfig {
     }
 
     /// Get the LLM cache as a reference (for internal use)
-    pub fn get_llm_cache_ref(&self) -> Result<std::sync::RwLockReadGuard<Option<Box<dyn BaseCache>>>> {
-        self.llm_cache.try_read()
+    pub fn get_llm_cache_ref(
+        &self,
+    ) -> Result<std::sync::RwLockReadGuard<'_, Option<Box<dyn BaseCache>>>> {
+        self.llm_cache
+            .try_read()
             .map_err(|_| crate::errors::FerricLinkError::generic("Failed to read LLM cache"))
     }
 
     /// Check if LLM cache is set (without taking a lock)
     pub fn has_llm_cache(&self) -> bool {
-        self.llm_cache.try_read()
+        self.llm_cache
+            .try_read()
             .map(|cache| cache.is_some())
             .unwrap_or(false)
     }
 
     /// Set the LLM cache
     pub fn set_llm_cache(&self, cache: Option<Box<dyn BaseCache>>) -> Result<()> {
-        let mut current_cache = self.llm_cache.write()
+        let mut current_cache = self
+            .llm_cache
+            .write()
             .map_err(|_| crate::errors::FerricLinkError::generic("Failed to write LLM cache"))?;
         *current_cache = cache;
         Ok(())
@@ -84,7 +90,6 @@ impl GlobalConfig {
     pub fn is_debug(&self) -> bool {
         self.get_debug()
     }
-
 
     /// Get a summary of current global settings
     pub fn summary(&self) -> String {
@@ -115,8 +120,9 @@ static GLOBAL_CONFIG: std::sync::OnceLock<GlobalConfig> = std::sync::OnceLock::n
 /// This function should be called early in your application to set up
 /// global settings. It's safe to call multiple times.
 pub fn init_globals() -> Result<()> {
-    GLOBAL_CONFIG.set(GlobalConfig::new())
-        .map_err(|_| crate::errors::FerricLinkError::generic("Failed to initialize global config"))?;
+    GLOBAL_CONFIG.set(GlobalConfig::new()).map_err(|_| {
+        crate::errors::FerricLinkError::generic("Failed to initialize global config")
+    })?;
     Ok(())
 }
 
@@ -127,7 +133,8 @@ pub fn init_globals() -> Result<()> {
 /// This function will panic if `init_globals()` has not been called first.
 /// Make sure to call `init_globals()` early in your application.
 pub fn get_globals() -> &'static GlobalConfig {
-    GLOBAL_CONFIG.get()
+    GLOBAL_CONFIG
+        .get()
         .expect("Global configuration not initialized. Call init_globals() first.")
 }
 
@@ -199,7 +206,6 @@ pub fn get_debug() -> bool {
 pub fn set_llm_cache(cache: Option<Box<dyn BaseCache>>) -> Result<()> {
     get_globals().set_llm_cache(cache)
 }
-
 
 /// Clear the global LLM cache
 ///
@@ -353,11 +359,11 @@ mod tests {
     #[test]
     fn test_global_config_verbose() {
         let config = GlobalConfig::new();
-        
+
         config.set_verbose(true);
         assert!(config.get_verbose());
         assert!(config.is_verbose());
-        
+
         config.set_verbose(false);
         assert!(!config.get_verbose());
         assert!(!config.is_verbose());
@@ -366,11 +372,11 @@ mod tests {
     #[test]
     fn test_global_config_debug() {
         let config = GlobalConfig::new();
-        
+
         config.set_debug(true);
         assert!(config.get_debug());
         assert!(config.is_debug());
-        
+
         config.set_debug(false);
         assert!(!config.get_debug());
         assert!(!config.is_debug());
@@ -379,17 +385,17 @@ mod tests {
     #[test]
     fn test_global_config_llm_cache() {
         let config = GlobalConfig::new();
-        
+
         // Initially no cache
         assert!(!config.has_llm_cache());
         assert!(config.get_llm_cache_ref().unwrap().is_none());
-        
+
         // Set a cache
         let cache = Box::new(InMemoryCache::new());
         config.set_llm_cache(Some(cache)).unwrap();
         assert!(config.has_llm_cache());
         assert!(config.get_llm_cache_ref().unwrap().is_some());
-        
+
         // Clear the cache
         config.clear_llm_cache().unwrap();
         assert!(!config.has_llm_cache());
@@ -400,7 +406,7 @@ mod tests {
     fn test_global_config_summary() {
         let config = GlobalConfig::new();
         let summary = config.summary();
-        
+
         assert!(summary.contains("verbose: false"));
         assert!(summary.contains("debug: false"));
         assert!(summary.contains("has_llm_cache: false"));
@@ -411,7 +417,7 @@ mod tests {
         let config = GlobalConfig::new();
         config.set_verbose(true);
         config.set_debug(true);
-        
+
         let cloned = config.clone();
         assert!(cloned.get_verbose());
         assert!(cloned.get_debug());
@@ -421,47 +427,47 @@ mod tests {
     fn test_global_functions() {
         // Initialize globals
         init_globals().unwrap();
-        
+
         // Test verbose functions
         set_verbose(true);
         assert!(get_verbose());
         assert!(is_verbose());
-        
+
         enable_verbose();
         assert!(get_verbose());
-        
+
         disable_verbose();
         assert!(!get_verbose());
-        
+
         toggle_verbose();
         assert!(get_verbose());
-        
+
         // Test debug functions
         set_debug(true);
         assert!(get_debug());
         assert!(is_debug());
-        
+
         enable_debug();
         assert!(get_debug());
-        
+
         disable_debug();
         assert!(!get_debug());
-        
+
         toggle_debug();
         assert!(get_debug());
-        
+
         // Test cache functions
         let cache = Box::new(InMemoryCache::new());
         set_llm_cache(Some(cache)).unwrap();
         assert!(has_llm_cache());
-        
+
         clear_llm_cache().unwrap();
         assert!(!has_llm_cache());
-        
+
         // Test summary
         let summary = globals_summary();
         assert!(summary.contains("GlobalConfig"));
-        
+
         // Test reset
         reset_globals().unwrap();
         assert!(!get_verbose());
@@ -473,7 +479,9 @@ mod tests {
     fn test_global_functions_without_init() {
         // This test is skipped because globals might already be initialized
         // from other tests running in the same process
-        println!("Skipping test_global_functions_without_init - globals may already be initialized");
+        println!(
+            "Skipping test_global_functions_without_init - globals may already be initialized"
+        );
     }
 
     #[test]

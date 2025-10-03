@@ -362,7 +362,7 @@ pub fn create_error_message(message: impl Into<String>, error_code: ErrorCode) -
     let message = message.into();
     let troubleshooting_url = error_code.troubleshooting_url();
     let error_code_str = error_code.as_str();
-    
+
     format!(
         "{message}\nError Code: {error_code_str}\nFor troubleshooting, visit: {troubleshooting_url}"
     )
@@ -487,10 +487,16 @@ mod tests {
     #[test]
     fn test_convenience_error_functions() {
         let invalid_prompt = FerricLinkError::invalid_prompt_input("bad prompt");
-        assert_eq!(invalid_prompt.error_code(), Some(ErrorCode::InvalidPromptInput));
+        assert_eq!(
+            invalid_prompt.error_code(),
+            Some(ErrorCode::InvalidPromptInput)
+        );
 
         let model_auth = FerricLinkError::model_authentication("auth failed");
-        assert_eq!(model_auth.error_code(), Some(ErrorCode::ModelAuthentication));
+        assert_eq!(
+            model_auth.error_code(),
+            Some(ErrorCode::ModelAuthentication)
+        );
 
         let rate_limit = FerricLinkError::model_rate_limit("too many requests");
         assert_eq!(rate_limit.error_code(), Some(ErrorCode::ModelRateLimit));
@@ -505,7 +511,7 @@ mod tests {
             true,
         );
         let ferric_err = FerricLinkError::OutputParser(parser_err);
-        
+
         assert!(ferric_err.should_send_to_llm());
         let context = ferric_err.llm_context();
         assert_eq!(context, Some((Some("obs"), Some("output"))));

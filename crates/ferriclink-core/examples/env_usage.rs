@@ -3,9 +3,7 @@
 //! This example demonstrates how to use the environment information system
 //! in FerricLink, similar to LangChain's env.py functionality.
 
-use ferriclink_core::{
-    get_runtime_environment, get_fresh_runtime_environment, RuntimeEnvironment,
-};
+use ferriclink_core::{RuntimeEnvironment, get_runtime_environment};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== FerricLink Environment Information Example ===\n");
@@ -32,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 3: Check features
     println!("3. Enabled Features:");
     for feature in &env.features {
-        println!("  - {}", feature);
+        println!("  - {feature}");
     }
     println!();
 
@@ -41,7 +39,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Debug mode: {}", env.is_debug());
     println!("  - Release mode: {}", env.is_release());
     println!("  - Has 'http' feature: {}", env.has_feature("http"));
-    println!("  - Has 'validation' feature: {}", env.has_feature("validation"));
+    println!(
+        "  - Has 'validation' feature: {}",
+        env.has_feature("validation")
+    );
     println!();
 
     // Example 5: Environment variables
@@ -53,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             value.clone()
         };
-        println!("  - {}: {}", key, display_value);
+        println!("  - {key}: {display_value}");
     }
     println!();
 
@@ -108,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// Demonstrate environment-specific behavior
 fn demonstrate_environment_specific_behavior(env: &RuntimeEnvironment) {
     println!("  - Running on {} architecture", env.architecture);
-    
+
     match env.os.as_str() {
         "Linux" => {
             println!("  - Linux detected: Using system-specific optimizations");
@@ -123,26 +124,29 @@ fn demonstrate_environment_specific_behavior(env: &RuntimeEnvironment) {
             println!("  - Unknown OS: Using generic implementations");
         }
     }
-    
+
     if env.is_debug() {
         println!("  - Debug build: Enhanced logging and error reporting enabled");
     } else {
         println!("  - Release build: Optimized for performance");
     }
-    
+
     if env.has_feature("http") {
         println!("  - HTTP feature enabled: Network operations available");
     }
-    
+
     if env.has_feature("validation") {
         println!("  - Validation feature enabled: Input validation available");
     }
 }
 
 /// Example of using environment information for configuration
-fn configure_based_on_environment(env: &RuntimeEnvironment) -> Result<(), Box<dyn std::error::Error>> {
+#[allow(dead_code)]
+fn configure_based_on_environment(
+    env: &RuntimeEnvironment,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("Configuring based on environment...");
-    
+
     // Set log level based on build type
     if env.is_debug() {
         unsafe {
@@ -155,7 +159,7 @@ fn configure_based_on_environment(env: &RuntimeEnvironment) -> Result<(), Box<dy
         }
         println!("  - Info logging enabled");
     }
-    
+
     // Configure based on platform
     match env.os.as_str() {
         "Linux" => {
@@ -171,17 +175,18 @@ fn configure_based_on_environment(env: &RuntimeEnvironment) -> Result<(), Box<dy
             println!("  - Generic configuration applied");
         }
     }
-    
+
     // Set memory limits based on available memory
     if let Some(memory) = env.memory_info() {
         if let Some(total) = memory.total_memory {
-            if total < 2 * 1024 * 1024 * 1024 { // Less than 2GB
+            if total < 2 * 1024 * 1024 * 1024 {
+                // Less than 2GB
                 println!("  - Low memory system detected, using conservative settings");
             } else {
                 println!("  - Sufficient memory available, using standard settings");
             }
         }
     }
-    
+
     Ok(())
 }

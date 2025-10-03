@@ -58,10 +58,7 @@ impl RuntimeEnvironment {
     pub fn summary(&self) -> String {
         format!(
             "FerricLink {} on {} {} ({})",
-            self.library_version,
-            self.os,
-            self.architecture,
-            self.runtime_version
+            self.library_version, self.os, self.architecture, self.runtime_version
         )
     }
 
@@ -97,7 +94,10 @@ impl Default for RuntimeEnvironment {
     }
 }
 
-impl_serializable!(RuntimeEnvironment, ["ferriclink", "env", "runtime_environment"]);
+impl_serializable!(
+    RuntimeEnvironment,
+    ["ferriclink", "env", "runtime_environment"]
+);
 
 /// Memory information about the system
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -218,7 +218,7 @@ fn get_architecture() -> String {
 /// Get Rust version information
 fn get_rust_version() -> String {
     std::env::var("RUSTC_VERSION")
-        .or_else(|_| std::env::var("RUSTC_VERSION_MAJOR").map(|v| format!("{}.0.0", v)))
+        .or_else(|_| std::env::var("RUSTC_VERSION_MAJOR").map(|v| format!("{v}.0.0")))
         .unwrap_or_else(|_| "unknown".to_string())
 }
 
@@ -228,7 +228,7 @@ fn get_compiler_info() -> String {
     if rustc_version == "unknown" {
         "rustc (version unknown)".to_string()
     } else {
-        format!("rustc {}", rustc_version)
+        format!("rustc {rustc_version}")
     }
 }
 
@@ -240,7 +240,7 @@ fn get_target_triple() -> String {
 /// Get relevant environment variables
 fn get_relevant_env_vars() -> HashMap<String, String> {
     let mut env_vars = HashMap::new();
-    
+
     // Common environment variables that might be relevant
     let relevant_vars = [
         "RUST_LOG",
@@ -256,51 +256,51 @@ fn get_relevant_env_vars() -> HashMap<String, String> {
         "LC_ALL",
         "TZ",
     ];
-    
+
     for var in &relevant_vars {
         if let Ok(value) = std::env::var(var) {
             env_vars.insert(var.to_string(), value);
         }
     }
-    
+
     // Add FerricLink-specific environment variables
     for (key, value) in std::env::vars() {
         if key.starts_with("FERRICLINK_") || key.starts_with("FERRIC_") {
             env_vars.insert(key, value);
         }
     }
-    
+
     env_vars
 }
 
 /// Get enabled features at compile time
 fn get_enabled_features() -> Vec<String> {
     let mut features = Vec::new();
-    
+
     // Check for common features
     #[cfg(feature = "http")]
     features.push("http".to_string());
-    
+
     #[cfg(feature = "validation")]
     features.push("validation".to_string());
-    
+
     #[cfg(feature = "all")]
     features.push("all".to_string());
-    
+
     // Add debug/release info
     if cfg!(debug_assertions) {
         features.push("debug".to_string());
     } else {
         features.push("release".to_string());
     }
-    
+
     // Add target info
     if cfg!(target_pointer_width = "64") {
         features.push("64bit".to_string());
     } else if cfg!(target_pointer_width = "32") {
         features.push("32bit".to_string());
     }
-    
+
     features
 }
 
@@ -327,12 +327,12 @@ fn get_memory_info() -> Option<MemoryInfo> {
 #[cfg(target_os = "linux")]
 fn get_linux_memory_info() -> Option<MemoryInfo> {
     use std::fs;
-    
+
     // Read /proc/meminfo
     let meminfo = fs::read_to_string("/proc/meminfo").ok()?;
     let mut total_memory = None;
     let mut available_memory = None;
-    
+
     for line in meminfo.lines() {
         if line.starts_with("MemTotal:") {
             if let Some(value) = line.split_whitespace().nth(1) {
@@ -344,10 +344,10 @@ fn get_linux_memory_info() -> Option<MemoryInfo> {
             }
         }
     }
-    
+
     // Get process memory usage
     let process_memory = get_process_memory_usage();
-    
+
     Some(MemoryInfo {
         total_memory,
         available_memory,
@@ -360,7 +360,7 @@ fn get_macos_memory_info() -> Option<MemoryInfo> {
     // On macOS, we can use system_profiler or sysctl
     // This is a simplified implementation
     let process_memory = get_process_memory_usage();
-    
+
     Some(MemoryInfo {
         total_memory: None,
         available_memory: None,
@@ -373,7 +373,7 @@ fn get_windows_memory_info() -> Option<MemoryInfo> {
     // On Windows, we would use Windows API calls
     // This is a simplified implementation
     let process_memory = get_process_memory_usage();
-    
+
     Some(MemoryInfo {
         total_memory: None,
         available_memory: None,

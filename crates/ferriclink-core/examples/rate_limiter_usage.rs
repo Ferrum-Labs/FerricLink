@@ -4,7 +4,7 @@
 //! in FerricLink, similar to LangChain's rate_limiters.py functionality.
 
 use ferriclink_core::{
-    BaseRateLimiter, InMemoryRateLimiter, AdvancedRateLimiter, RateLimiterConfig,
+    AdvancedRateLimiter, BaseRateLimiter, InMemoryRateLimiter, RateLimiterConfig,
 };
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
@@ -59,22 +59,25 @@ async fn basic_rate_limiter_example() -> Result<(), Box<dyn std::error::Error>> 
 
     for i in 1..=3 {
         let request_start = Instant::now();
-        
+
         // Try to acquire a token (blocking)
         let acquired = rate_limiter.aacquire(true).await?;
-        
+
         let request_duration = request_start.elapsed();
-        
+
         if acquired {
-            println!("    Request {}: SUCCESS (waited {:?})", i, request_duration);
+            println!("    Request {i}: SUCCESS (waited {request_duration:?})");
         } else {
-            println!("    Request {}: FAILED (waited {:?})", i, request_duration);
+            println!("    Request {i}: FAILED (waited {request_duration:?})");
         }
     }
 
     let total_duration = start.elapsed();
-    println!("  - Total time: {:?}", total_duration);
-    println!("  - Available tokens: {:.2}", rate_limiter.available_tokens().await);
+    println!("  - Total time: {total_duration:?}");
+    println!(
+        "  - Available tokens: {:.2}",
+        rate_limiter.available_tokens().await
+    );
 
     Ok(())
 }
@@ -96,7 +99,7 @@ async fn advanced_rate_limiter_example() -> Result<(), Box<dyn std::error::Error
 
     for i in 1..=3 {
         let start = Instant::now();
-        
+
         match rate_limiter.aacquire(true).await {
             Ok(true) => {
                 println!("    Request {}: SUCCESS (took {:?})", i, start.elapsed());
@@ -105,7 +108,7 @@ async fn advanced_rate_limiter_example() -> Result<(), Box<dyn std::error::Error
                 println!("    Request {}: FAILED (took {:?})", i, start.elapsed());
             }
             Err(e) => {
-                println!("    Request {}: ERROR - {}", i, e);
+                println!("    Request {i}: ERROR - {e}");
             }
         }
     }
@@ -129,16 +132,19 @@ async fn burst_rate_limiter_example() -> Result<(), Box<dyn std::error::Error>> 
         let acquired = rate_limiter.aacquire(false).await?;
         if acquired {
             successful_requests += 1;
-            println!("    Request {}: SUCCESS (burst)", i);
+            println!("    Request {i}: SUCCESS (burst)");
         } else {
-            println!("    Request {}: FAILED (rate limited)", i);
+            println!("    Request {i}: FAILED (rate limited)");
         }
     }
 
     let duration = start.elapsed();
-    println!("  - Successful requests: {}/7", successful_requests);
-    println!("  - Time taken: {:?}", duration);
-    println!("  - Available tokens: {:.2}", rate_limiter.available_tokens().await);
+    println!("  - Successful requests: {successful_requests}/7");
+    println!("  - Time taken: {duration:?}");
+    println!(
+        "  - Available tokens: {:.2}",
+        rate_limiter.available_tokens().await
+    );
 
     // Wait a bit and try again
     println!("  - Waiting 1 second and trying again...");
@@ -156,18 +162,29 @@ async fn burst_rate_limiter_example() -> Result<(), Box<dyn std::error::Error>> 
 
 /// Rate limiter configuration example
 async fn rate_limiter_config_example() -> Result<(), Box<dyn std::error::Error>> {
-    let mut config = RateLimiterConfig::default();
-    config.log_events = true;
-    config.max_retries = 3;
-    config.initial_backoff_duration = Duration::from_millis(100);
+    let config = RateLimiterConfig {
+        log_events: true,
+        max_retries: 3,
+        initial_backoff_duration: Duration::from_millis(100),
+        ..Default::default()
+    };
 
     let mut rate_limiter = AdvancedRateLimiter::new(0.2, 0.1, 1.0, config);
 
     println!("  - Configuration:");
     println!("    - Max retries: {}", rate_limiter.config().max_retries);
-    println!("    - Initial backoff: {:?}", rate_limiter.config().initial_backoff_duration);
-    println!("    - Max backoff: {:?}", rate_limiter.config().max_backoff_duration);
-    println!("    - Exponential backoff: {}", rate_limiter.config().use_exponential_backoff);
+    println!(
+        "    - Initial backoff: {:?}",
+        rate_limiter.config().initial_backoff_duration
+    );
+    println!(
+        "    - Max backoff: {:?}",
+        rate_limiter.config().max_backoff_duration
+    );
+    println!(
+        "    - Exponential backoff: {}",
+        rate_limiter.config().use_exponential_backoff
+    );
 
     // Update configuration
     let new_config = RateLimiterConfig {
@@ -182,8 +199,14 @@ async fn rate_limiter_config_example() -> Result<(), Box<dyn std::error::Error>>
 
     println!("  - Updated configuration:");
     println!("    - Max retries: {}", rate_limiter.config().max_retries);
-    println!("    - Initial backoff: {:?}", rate_limiter.config().initial_backoff_duration);
-    println!("    - Exponential backoff: {}", rate_limiter.config().use_exponential_backoff);
+    println!(
+        "    - Initial backoff: {:?}",
+        rate_limiter.config().initial_backoff_duration
+    );
+    println!(
+        "    - Exponential backoff: {}",
+        rate_limiter.config().use_exponential_backoff
+    );
 
     Ok(())
 }
@@ -209,7 +232,7 @@ async fn performance_test_example() -> Result<(), Box<dyn std::error::Error>> {
 
         // Print progress every 10 requests
         if i % 10 == 0 {
-            println!("    Progress: {}/50 ({} successful, {} failed)", i, successful, failed);
+            println!("    Progress: {i}/50 ({successful} successful, {failed} failed)",);
         }
     }
 
@@ -217,10 +240,10 @@ async fn performance_test_example() -> Result<(), Box<dyn std::error::Error>> {
     let requests_per_second = 50.0 / duration.as_secs_f64();
 
     println!("  - Results:");
-    println!("    - Successful: {}", successful);
-    println!("    - Failed: {}", failed);
-    println!("    - Total time: {:?}", duration);
-    println!("    - Effective rate: {:.2} requests/second", requests_per_second);
+    println!("    - Successful: {successful}");
+    println!("    - Failed: {failed}");
+    println!("    - Total time: {duration:?}");
+    println!("    - Effective rate: {requests_per_second:.2} requests/second",);
 
     Ok(())
 }
@@ -228,28 +251,28 @@ async fn performance_test_example() -> Result<(), Box<dyn std::error::Error>> {
 /// LangChain-compatible usage example
 async fn langchain_compatible_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - LangChain-compatible rate limiter usage:");
-    
+
     // This mimics how LangChain uses rate limiters
     let rate_limiter = InMemoryRateLimiter::new(0.1, 0.1, 1.0); // 1 request every 10 seconds
 
     println!("  - Simulating LangChain model calls with rate limiting...");
 
     for i in 1..=3 {
-        println!("    Call {}: Acquiring rate limit token...", i);
-        
+        println!("    Call {i}: Acquiring rate limit token...");
+
         let acquire_start = Instant::now();
         let acquired = rate_limiter.aacquire(true).await?;
         let acquire_duration = acquire_start.elapsed();
-        
+
         if acquired {
-            println!("    Call {}: Token acquired (waited {:?})", i, acquire_duration);
-            
+            println!("    Call {i}: Token acquired (waited {acquire_duration:?})",);
+
             // Simulate the actual model call
-            println!("    Call {}: Making model request...", i);
+            println!("    Call {i}: Making model request...");
             sleep(Duration::from_millis(100)).await; // Simulate API call
-            println!("    Call {}: Model request completed", i);
+            println!("    Call {i}: Model request completed");
         } else {
-            println!("    Call {}: Failed to acquire token", i);
+            println!("    Call {i}: Failed to acquire token");
         }
     }
 
@@ -257,15 +280,16 @@ async fn langchain_compatible_example() -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Example of using rate limiters with different strategies
+#[allow(dead_code)]
 async fn rate_limiter_strategies_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Different rate limiting strategies:");
 
     // Conservative rate limiter for production
-    let conservative = InMemoryRateLimiter::new(1.0, 0.1, 2.0);
+    let _conservative = InMemoryRateLimiter::new(1.0, 0.1, 2.0);
     println!("    Conservative: 1 req/sec, burst 2");
 
     // Aggressive rate limiter for testing
-    let aggressive = InMemoryRateLimiter::new(10.0, 0.01, 5.0);
+    let _aggressive = InMemoryRateLimiter::new(10.0, 0.01, 5.0);
     println!("    Aggressive: 10 req/sec, burst 5");
 
     // Adaptive rate limiter with retry logic
@@ -276,7 +300,7 @@ async fn rate_limiter_strategies_example() -> Result<(), Box<dyn std::error::Err
         max_retries: 10,
         log_events: true,
     };
-    let adaptive = AdvancedRateLimiter::new(2.0, 0.05, 3.0, adaptive_config);
+    let _adaptive = AdvancedRateLimiter::new(2.0, 0.05, 3.0, adaptive_config);
     println!("    Adaptive: 2 req/sec, burst 3, with retry logic");
 
     Ok(())

@@ -490,13 +490,13 @@ mod tests {
             &self,
             structured_query: &StructuredQuery,
         ) -> Result<Self::Output, String> {
-            let filter_str = if let Some(_) = &structured_query.filter {
+            let filter_str = if structured_query.filter.is_some() {
                 "with filter"
             } else {
                 "no filter"
             };
             let limit_str = if let Some(limit) = structured_query.limit {
-                format!(", limit: {}", limit)
+                format!(", limit: {limit}")
             } else {
                 String::new()
             };

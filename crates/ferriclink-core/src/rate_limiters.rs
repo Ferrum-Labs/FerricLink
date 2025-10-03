@@ -161,11 +161,7 @@ impl InMemoryRateLimiter {
     /// # Panics
     ///
     /// Panics if `max_bucket_size` is less than 1.0.
-    pub fn new(
-        requests_per_second: f64,
-        check_every_n_seconds: f64,
-        max_bucket_size: f64,
-    ) -> Self {
+    pub fn new(requests_per_second: f64, check_every_n_seconds: f64, max_bucket_size: f64) -> Self {
         assert!(
             max_bucket_size >= 1.0,
             "max_bucket_size must be at least 1.0"
@@ -265,7 +261,14 @@ impl InMemoryRateLimiter {
     }
 }
 
-impl_serializable!(InMemoryRateLimiterConfig, ["ferriclink", "rate_limiters", "in_memory_rate_limiter_config"]);
+impl_serializable!(
+    InMemoryRateLimiterConfig,
+    [
+        "ferriclink",
+        "rate_limiters",
+        "in_memory_rate_limiter_config"
+    ]
+);
 
 #[async_trait]
 impl BaseRateLimiter for InMemoryRateLimiter {
@@ -277,8 +280,11 @@ impl BaseRateLimiter for InMemoryRateLimiter {
                 return handle.block_on(self.consume());
             } else {
                 // If we're not in an async context, create a new runtime
-                let rt = tokio::runtime::Runtime::new()
-                    .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Failed to create runtime: {}", e)))?;
+                let rt = tokio::runtime::Runtime::new().map_err(|e| {
+                    crate::errors::FerricLinkError::runtime(format!(
+                        "Failed to create runtime: {e}",
+                    ))
+                })?;
                 return rt.block_on(self.consume());
             }
         }
@@ -288,8 +294,11 @@ impl BaseRateLimiter for InMemoryRateLimiter {
             let acquired = if let Ok(handle) = tokio::runtime::Handle::try_current() {
                 handle.block_on(self.consume())?
             } else {
-                let rt = tokio::runtime::Runtime::new()
-                    .map_err(|e| crate::errors::FerricLinkError::runtime(format!("Failed to create runtime: {}", e)))?;
+                let rt = tokio::runtime::Runtime::new().map_err(|e| {
+                    crate::errors::FerricLinkError::runtime(format!(
+                        "Failed to create runtime: {e}",
+                    ))
+                })?;
                 rt.block_on(self.consume())?
             };
 
@@ -362,7 +371,11 @@ impl AdvancedRateLimiter {
         config: RateLimiterConfig,
     ) -> Self {
         Self {
-            inner: InMemoryRateLimiter::new(requests_per_second, check_every_n_seconds, max_bucket_size),
+            inner: InMemoryRateLimiter::new(
+                requests_per_second,
+                check_every_n_seconds,
+                max_bucket_size,
+            ),
             config,
         }
     }
@@ -387,14 +400,15 @@ impl AdvancedRateLimiter {
 
                     if retries >= self.config.max_retries {
                         return Err(crate::errors::FerricLinkError::model_rate_limit(
-                            "Max retries exceeded for rate limiter"
+                            "Max retries exceeded for rate limiter",
                         ));
                     }
 
                     if self.config.log_events {
                         println!(
                             "Rate limiter: Token not available, retrying in {:?} (attempt {})",
-                            backoff_duration, retries + 1
+                            backoff_duration,
+                            retries + 1
                         );
                     }
 
@@ -435,7 +449,10 @@ impl BaseRateLimiter for AdvancedRateLimiter {
     }
 }
 
-impl_serializable!(RateLimiterConfig, ["ferriclink", "rate_limiters", "rate_limiter_config"]);
+impl_serializable!(
+    RateLimiterConfig,
+    ["ferriclink", "rate_limiters", "rate_limiter_config"]
+);
 
 #[cfg(test)]
 mod tests {
@@ -536,11 +553,11 @@ mod tests {
 
         // Wait enough time to accumulate more tokens (1 second for 1 token at 1 req/sec)
         sleep(Duration::from_millis(1100)).await;
-        
+
         // Try to acquire a token to trigger token accumulation
         let acquired = rate_limiter.aacquire(false).await.unwrap();
         assert!(acquired, "Should have acquired a token after waiting");
-        
+
         // After acquiring the token, should have fewer tokens (but not necessarily 0 due to accumulation)
         let tokens_after = rate_limiter.available_tokens().await;
         assert!(tokens_after >= 0.0);
@@ -551,11 +568,21 @@ mod tests {
         let rate_limiter = InMemoryRateLimiter::new(2.0, 0.1, 5.0);
         let config = rate_limiter.to_config();
         let serialized = serde_json::to_string(&config).unwrap();
-        let deserialized_config: InMemoryRateLimiterConfig = serde_json::from_str(&serialized).unwrap();
+        let deserialized_config: InMemoryRateLimiterConfig =
+            serde_json::from_str(&serialized).unwrap();
         let deserialized_rate_limiter = InMemoryRateLimiter::from_config(deserialized_config);
 
-        assert_eq!(rate_limiter.requests_per_second(), deserialized_rate_limiter.requests_per_second());
-        assert_eq!(rate_limiter.check_every_n_seconds(), deserialized_rate_limiter.check_every_n_seconds());
-        assert_eq!(rate_limiter.max_bucket_size(), deserialized_rate_limiter.max_bucket_size());
+        assert_eq!(
+            rate_limiter.requests_per_second(),
+            deserialized_rate_limiter.requests_per_second()
+        );
+        assert_eq!(
+            rate_limiter.check_every_n_seconds(),
+            deserialized_rate_limiter.check_every_n_seconds()
+        );
+        assert_eq!(
+            rate_limiter.max_bucket_size(),
+            deserialized_rate_limiter.max_bucket_size()
+        );
     }
 }
