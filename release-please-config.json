@@ -4,7 +4,7 @@
   "packages": {
     "crates/ferriclink-core": {
       "release-type": "rust",
-      "changelog-path": "crates/ferriclink-core/CHANGELOG.md"
+      "changelog-path": "CHANGELOG.md"
     }
   },
   "plugins": [
