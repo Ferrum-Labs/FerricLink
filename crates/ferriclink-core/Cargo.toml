@@ -59,7 +59,7 @@ async-trait = "0.1.89"
 itertools = "0.14.0"
 
 # String handling
-regex = "1.11.3"
+regex = "1.12.2"
 
 [features]
 default = []
