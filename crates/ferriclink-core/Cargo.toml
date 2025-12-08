@@ -69,7 +69,7 @@ all = ["http", "validation"]
 
 [dev-dependencies]
 tokio-test = "0.4.4"
-criterion = "0.7.0"
+criterion = "0.8.1"
 
 [[example]]
 name = "structured_query_usage"
