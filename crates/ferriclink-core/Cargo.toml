@@ -47,7 +47,7 @@ validator = { version = "0.20.0", features = ["derive"], optional = true }
 
 # Logging and tracing
 tracing = "0.1.41"
-tracing-subscriber = "0.3.20"
+tracing-subscriber = "0.3.22"
 
 # HTTP client for external integrations
 reqwest = { version = "0.12.23", features = ["json", "stream"], optional = true }
