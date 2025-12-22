@@ -50,7 +50,7 @@ tracing = "0.1.41"
 tracing-subscriber = "0.3.20"
 
 # HTTP client for external integrations
-reqwest = { version = "0.12.23", features = ["json", "stream"], optional = true }
+reqwest = { version = "0.12.26", features = ["json", "stream"], optional = true }
 
 # Async traits
 async-trait = "0.1.89"
