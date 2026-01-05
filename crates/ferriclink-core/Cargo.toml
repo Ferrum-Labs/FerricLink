@@ -68,7 +68,7 @@ validation = ["dep:validator"]
 all = ["http", "validation"]
 
 [dev-dependencies]
-tokio-test = "0.4.4"
+tokio-test = "0.4.5"
 criterion = "0.7.0"
 
 [[example]]
